@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
+import { useAuth } from '../../contexts/AuthContext';
 import {
   getUserById,
   updateUserById,
@@ -41,6 +42,7 @@ function ProfilePage() {
     confirmPassword: "",
   });
   const [passwordErrors, setPasswordErrors] = useState({});
+  const { updateAuthState } = useAuth();
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -182,8 +184,15 @@ function ProfilePage() {
         const userId = decoded.id;
 
         await deleteUserByUserId(userId);
+        localStorage.removeItem("token");
+        
+        // Update auth context
+        updateAuthState({
+          isAuthenticated: false,
+          user: null
+        });
+
         toast.success("Account deleted successfully");
-        localStorage.removeItem("token"); // Clear token
         navigate("/login");
       } catch (error) {
         console.error("Error deleting account:", error);

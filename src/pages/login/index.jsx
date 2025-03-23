@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-// import { FcGoogle } from "react-icons/fc";
 import { postLogin } from "../../services/api.login";
 import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode"; // Giải mã token
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { postRegister } from "../../services/api.register";
+import { useAuth } from '../../contexts/AuthContext';
 
 function LoginPage() {
   const [formData, setFormData] = useState({
@@ -21,6 +21,8 @@ function LoginPage() {
   const [errors] = useState({});
 
   const navigate = useNavigate();
+
+  const { updateAuthState } = useAuth();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -54,7 +56,6 @@ function LoginPage() {
         console.log("Login response:", data);
 
         if (typeof data === "string") {
-          // Kiểm tra nếu data là string
           const token = data;
           localStorage.setItem("token", token);
           if (isRememberMe) {
@@ -63,15 +64,21 @@ function LoginPage() {
             localStorage.removeItem("email");
           }
           toast.success("Login successful!");
-          const decodedToken = jwtDecode(token);
-          const role = decodedToken.role;
+          const decoded = jwtDecode(token);
+          
+          // Update auth context
+          updateAuthState({
+            isAuthenticated: true,
+            user: decoded
+          });
+
+          const role = decoded.role;
           if (role === "Customer") {
             navigate("/");
           } else if (role === "Staff" || role === "Manager") {
             navigate("/dashboard");
           }
         } else if (data && data.token) {
-          // Kiểm tra nếu data có token
           const token = data.token;
           localStorage.setItem("token", token);
           if (isRememberMe) {
@@ -80,15 +87,14 @@ function LoginPage() {
             localStorage.removeItem("email");
           }
           toast.success("Login successful!");
-          const decodedToken = jwtDecode(token);
-          const role = decodedToken.role;
+          const decoded = jwtDecode(token);
+          const role = decoded.role;
           if (role === "Customer") {
             navigate("/");
           } else if (role === "Staff" || role === "Manager") {
             navigate("/dashboard");
           }
         } else {
-          // Kiểm tra nếu data không có token
           console.error("Login failed: No token received");
           toast.error("Login failed: Invalid credentials.");
         }

@@ -8,14 +8,14 @@ import {
   FaSignOutAlt,
 } from "react-icons/fa";
 import { getProduct } from "../services/api.product";
-import { jwtDecode } from "jwt-decode";
+import { useAuth } from '../contexts/AuthContext';
 
 function Header() {
+  const { authState, updateAuthState } = useAuth();
   const [showAuthOptions, setShowAuthOptions] = useState(false); // State để control dropdown
   const [searchTerm, setSearchTerm] = useState(""); // State để lưu trữ từ khóa tìm kiếm
   const [suggestions, setSuggestions] = useState([]); // State để lưu trữ gợi ý sản phẩm
-  const [user, setUser] = useState(null); // Thêm state cho user
-  const navigate = useNavigate(); // Khởi tạo useNavigate
+  const navigate = useNavigate();
 
   // Hàm xử lý thay đổi tìm kiếm
   const handleSearchChange = async (e) => {
@@ -60,25 +60,17 @@ function Header() {
     };
   }, []);
 
-  // Kiểm tra token và lấy thông tin user
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      try {
-        const decoded = jwtDecode(token);
-        setUser(decoded);
-      } catch (error) {
-        console.error("Invalid token:", error);
-        localStorage.removeItem("token");
-      }
-    }
-  }, []);
-
   // Hàm xử lý logout
   const handleLogout = () => {
     localStorage.removeItem("token");
-    setUser(null);
     setShowAuthOptions(false);
+    
+    // Update auth context when logging out
+    updateAuthState({
+      isAuthenticated: false,
+      user: null
+    });
+    
     navigate("/login");
   };
 
@@ -192,10 +184,10 @@ function Header() {
                 onMouseLeave={() => setShowAuthOptions(false)}
               >
                 <button className="p-2 rounded-full hover:bg-pink-100 transition-all duration-300">
-                  {user ? (
+                  {authState.user ? (
                     <div className="w-8 h-8 rounded-full bg-pink-600 flex items-center justify-center">
                       <span className="text-white font-medium text-sm">
-                        {getInitials(user.email)}
+                        {getInitials(authState.user.email)}
                       </span>
                     </div>
                   ) : (
@@ -211,20 +203,20 @@ function Header() {
                   >
                     <div className="p-4 bg-gradient-to-r from-pink-100/50 to-pink-50/50">
                       <h3 className="text-pink-600 font-semibold text-lg mb-1">
-                        {user ? `Welcome!` : "Welcome!"}
+                        {authState.user ? `Welcome!` : "Welcome!"}
                       </h3>
                       <p className="text-gray-600 text-s">
-                        {user
-                          ? user.user
+                        {authState.user
+                          ? authState.user.user
                           : "Please login or create an account"}
                       </p>
                     </div>
                     <div className="p-2">
-                      {user ? (
+                      {authState.user ? (
                         // Menu cho user đã đăng nhập
                         <>
                           <Link
-                            to={`/profile/${user.id}`}
+                            to={`/profile/${authState.user.id}`}
                             className="flex items-center space-x-2 px-4 py-3 text-gray-700 
                               hover:bg-pink-50 rounded-xl hover:text-pink-600 transition-colors"
                           >

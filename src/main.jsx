@@ -6,6 +6,7 @@
   import { ToastContainer } from "react-toastify";
   import ProtectedRoute from "./auth/protectedRoute.jsx";
   import ManagerRoute from "./auth/managerRoute.jsx";
+  import { AuthProvider } from './contexts/AuthContext'
 
   import MainLayout from "./layout/MainLayout.jsx";
   import LoginPage from "./pages/login/index.jsx";
@@ -396,8 +397,10 @@
 
   createRoot(document.getElementById("root")).render(
     <StrictMode>
-      <Effect /> {/* Thêm Effect Hoa đào rơi */}
-      <RouterProvider router={router} /> {/* Router các pages */}
-      <ToastContainer /> {/* Toast hiển thị thông báo */}
+      <AuthProvider>
+        <Effect /> {/* Thêm Effect Hoa đào rơi */}
+        <RouterProvider router={router} /> {/* Router các pages */}
+        <ToastContainer /> {/* Toast hiển thị thông báo */}
+      </AuthProvider>
     </StrictMode>
   );
