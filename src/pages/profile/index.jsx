@@ -5,6 +5,7 @@ import {
   getUserById,
   updateUserById,
   updateUserPassword,
+  deleteUserByUserId,
 } from "../../services/api.user";
 import { toast } from "react-toastify";
 import {
@@ -18,6 +19,7 @@ import {
   FaSave,
   FaKey,
   FaShoppingBag,
+  FaTrash,
 } from "react-icons/fa";
 
 function ProfilePage() {
@@ -105,17 +107,17 @@ function ProfilePage() {
 
   const validatePasswordForm = () => {
     const errors = {};
-    
+
     if (!passwordData.oldPassword) {
       errors.oldPassword = "Current password is required";
     }
-    
+
     if (!passwordData.newPassword) {
       errors.newPassword = "New password is required";
     } else if (passwordData.newPassword.length < 8) {
       errors.newPassword = "Password must be at least 8 characters";
     }
-    
+
     if (!passwordData.confirmPassword) {
       errors.confirmPassword = "Please confirm your new password";
     } else if (passwordData.confirmPassword !== passwordData.newPassword) {
@@ -128,7 +130,7 @@ function ProfilePage() {
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
-    
+
     if (!validatePasswordForm()) {
       return; // Dừng submit nếu có lỗi validation
     }
@@ -141,7 +143,7 @@ function ProfilePage() {
       // Chỉ gửi oldPassword và newPassword lên server
       const passwordUpdateData = {
         oldPassword: passwordData.oldPassword,
-        newPassword: passwordData.newPassword
+        newPassword: passwordData.newPassword,
       };
 
       await updateUserPassword(userId, passwordUpdateData);
@@ -151,7 +153,7 @@ function ProfilePage() {
       setPasswordData({
         oldPassword: "",
         newPassword: "",
-        confirmPassword: ""
+        confirmPassword: "",
       });
       setPasswordErrors({});
     } catch (error) {
@@ -166,6 +168,28 @@ function ProfilePage() {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handleDeleteAccount = async () => {
+    const isConfirmed = window.confirm(
+      "Are you sure you want to delete your account? This action cannot be undone."
+    );
+
+    if (isConfirmed) {
+      try {
+        const token = localStorage.getItem("token");
+        const decoded = jwtDecode(token);
+        const userId = decoded.id;
+
+        await deleteUserByUserId(userId);
+        toast.success("Account deleted successfully");
+        localStorage.removeItem("token"); // Clear token
+        navigate("/login");
+      } catch (error) {
+        console.error("Error deleting account:", error);
+        toast.error("Failed to delete account");
+      }
+    }
   };
 
   // Edit Profile Modal
@@ -317,11 +341,15 @@ function ProfilePage() {
               value={passwordData.oldPassword}
               onChange={handlePasswordInputChange}
               className={`w-full px-4 py-3 rounded-lg border ${
-                passwordErrors.oldPassword ? 'border-red-500' : 'border-gray-300'
+                passwordErrors.oldPassword
+                  ? "border-red-500"
+                  : "border-gray-300"
               } focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all duration-200`}
             />
             {passwordErrors.oldPassword && (
-              <p className="mt-1 text-sm text-red-500">{passwordErrors.oldPassword}</p>
+              <p className="mt-1 text-sm text-red-500">
+                {passwordErrors.oldPassword}
+              </p>
             )}
           </div>
 
@@ -337,11 +365,15 @@ function ProfilePage() {
               value={passwordData.newPassword}
               onChange={handlePasswordInputChange}
               className={`w-full px-4 py-3 rounded-lg border ${
-                passwordErrors.newPassword ? 'border-red-500' : 'border-gray-300'
+                passwordErrors.newPassword
+                  ? "border-red-500"
+                  : "border-gray-300"
               } focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all duration-200`}
             />
             {passwordErrors.newPassword && (
-              <p className="mt-1 text-sm text-red-500">{passwordErrors.newPassword}</p>
+              <p className="mt-1 text-sm text-red-500">
+                {passwordErrors.newPassword}
+              </p>
             )}
           </div>
 
@@ -357,11 +389,15 @@ function ProfilePage() {
               value={passwordData.confirmPassword}
               onChange={handlePasswordInputChange}
               className={`w-full px-4 py-3 rounded-lg border ${
-                passwordErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
+                passwordErrors.confirmPassword
+                  ? "border-red-500"
+                  : "border-gray-300"
               } focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all duration-200`}
             />
             {passwordErrors.confirmPassword && (
-              <p className="mt-1 text-sm text-red-500">{passwordErrors.confirmPassword}</p>
+              <p className="mt-1 text-sm text-red-500">
+                {passwordErrors.confirmPassword}
+              </p>
             )}
           </div>
 
@@ -371,7 +407,11 @@ function ProfilePage() {
               type="button"
               onClick={() => {
                 setIsPasswordModalOpen(false);
-                setPasswordData({ oldPassword: "", newPassword: "", confirmPassword: "" });
+                setPasswordData({
+                  oldPassword: "",
+                  newPassword: "",
+                  confirmPassword: "",
+                });
                 setPasswordErrors({});
               }}
               className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 
@@ -418,7 +458,7 @@ function ProfilePage() {
                   />
                 ) : (
                   <span className="text-5xl font-bold text-pink-600">
-                    {user?.userName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase()}
+                    {user?.email?.charAt(0).toUpperCase()}
                   </span>
                 )}
               </div>
@@ -444,7 +484,7 @@ function ProfilePage() {
                 </h2>
 
                 <div className="space-y-6">
-                  {/* Info items with hover effect */}
+                  {/* User name */}
                   <div className="flex items-center space-x-4 p-4 hover:bg-pink-50 rounded-lg transition-colors duration-200">
                     <FaUser className="text-pink-500 w-6 h-6" />
                     <div>
@@ -456,7 +496,7 @@ function ProfilePage() {
                       </p>
                     </div>
                   </div>
-
+                  {/* Email */}
                   <div className="flex items-center space-x-4 p-4 hover:bg-pink-50 rounded-lg transition-colors duration-200">
                     <FaEnvelope className="text-pink-500 w-6 h-6" />
                     <div>
@@ -466,7 +506,7 @@ function ProfilePage() {
                       </p>
                     </div>
                   </div>
-
+                  {/* Phone Number */}
                   <div className="flex items-center space-x-4 p-4 hover:bg-pink-50 rounded-lg transition-colors duration-200">
                     <FaPhone className="text-pink-500 w-6 h-6" />
                     <div>
@@ -476,7 +516,7 @@ function ProfilePage() {
                       </p>
                     </div>
                   </div>
-
+                  {/* Address */}
                   <div className="flex items-center space-x-4 p-4 hover:bg-pink-50 rounded-lg transition-colors duration-200">
                     <FaMapMarkerAlt className="text-pink-500 w-6 h-6" />
                     <div>
@@ -488,7 +528,7 @@ function ProfilePage() {
                       </p>
                     </div>
                   </div>
-
+                  {/* Date of Birth */}
                   <div className="flex items-center space-x-4 p-4 hover:bg-pink-50 rounded-lg transition-colors duration-200">
                     <FaCalendar className="text-pink-500 w-6 h-6" />
                     <div>
@@ -500,7 +540,7 @@ function ProfilePage() {
                       </p>
                     </div>
                   </div>
-
+                  {/* Gender */}
                   <div className="flex items-center space-x-4 p-4 hover:bg-pink-50 rounded-lg transition-colors duration-200">
                     <FaVenusMars className="text-pink-500 w-6 h-6" />
                     <div>
@@ -514,36 +554,18 @@ function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Updated buttons section with View Orders */}
-                <div className="flex flex-wrap gap-4">
-                  <button
-                    onClick={() => setIsEditModalOpen(true)}
-                    className="flex items-center px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 
+                {/* Edit profile*/}
+                <button
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="flex items-center px-6 py-3 bg-gradient-to-r from-pink-500 to-pink-600 
                       text-white rounded-lg hover:from-pink-600 hover:to-pink-700 
                       transition-all duration-200 shadow-md hover:shadow-lg"
-                  >
-                    <FaUser className="mr-2" /> Edit Profile
-                  </button>
-                  <button
-                    onClick={() => setIsPasswordModalOpen(true)}
-                    className="flex items-center px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 
-                      text-white rounded-lg hover:from-purple-600 hover:to-purple-700 
-                      transition-all duration-200 shadow-md hover:shadow-lg"
-                  >
-                    <FaLock className="mr-2" /> Change Password
-                  </button>
-                  <button
-                    onClick={() => navigate(`/order-status/${user?.id}`)}
-                    className="flex items-center px-6 py-3 bg-gradient-to-r from-pink-400 to-pink-500 
-                      text-white rounded-lg hover:from-pink-500 hover:to-pink-600 
-                      transition-all duration-200 shadow-md hover:shadow-lg"
-                  >
-                    <FaShoppingBag className="mr-2" /> View Orders
-                  </button>
-                </div>
+                >
+                  <FaUser className="mr-2" /> Edit Profile
+                </button>
               </div>
 
-              {/* Account Information - Updated styling */}
+              {/* Account Information */}
               <div className="space-y-8">
                 <h2 className="text-2xl font-semibold text-gray-800 border-b border-gray-200 pb-2">
                   Account Information
@@ -558,6 +580,37 @@ function ProfilePage() {
                     </p>
                   </div>
                 </div>
+
+                {/* Password and Delete buttons in same row */}
+                <div className="flex gap-4">
+                  {/* Change Password */}
+                  <button
+                    onClick={() => setIsPasswordModalOpen(true)}
+                    className="flex items-center px-4 py-4 text-sm bg-gradient-to-r from-purple-500 to-purple-600 
+                        text-white rounded-lg hover:from-purple-600 hover:to-purple-700 
+                        transition-all duration-200 shadow-md hover:shadow-lg"
+                  >
+                    <FaLock className="mr-2 text-xs" /> Change Password
+                  </button>
+                  {/* Delete Account */}
+                  <button
+                    onClick={handleDeleteAccount}
+                    className="flex items-center px-4 py-4 text-sm bg-gradient-to-r from-red-500 to-red-600 
+                        text-white rounded-lg hover:from-red-600 hover:to-red-700 
+                        transition-all duration-200 shadow-md hover:shadow-lg"
+                  >
+                    <FaTrash className="mr-2 text-xs" /> Delete Account
+                  </button>
+                </div>
+                {/* View Orders button on its own row */}
+                <button
+                  onClick={() => navigate(`/order-status/${user?.id}`)}
+                  className="flex items-center px-6 py-3 bg-gradient-to-r from-pink-400 to-pink-500 
+                      text-white rounded-lg hover:from-pink-500 hover:to-pink-600 
+                      transition-all duration-200 shadow-md hover:shadow-lg"
+                >
+                  <FaShoppingBag className="mr-2" /> View Orders
+                </button>
               </div>
             </div>
           </div>
