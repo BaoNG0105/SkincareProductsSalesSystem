@@ -7,6 +7,7 @@ import {
   deleteOrderItemsByOrderItemId,
   updateOrderStatusByOrderId,
 } from "../../services/api.order";
+import { updateProductQuantity } from "../../services/api.product";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import { getUserById } from "../../services/api.user";
@@ -88,6 +89,33 @@ function CartPage() {
     if (newQuantity < 1) return;
 
     try {
+      // Fetch current order data to check stock quantity
+      const token = localStorage.getItem("token");
+      const decoded = jwtDecode(token);
+      const userId = decoded.id;
+      const orderData = await getOrderIdAndStatusByUserId(userId);
+
+      // Find the current product's stock quantity
+      const currentProduct = orderData
+        .flatMap((order) => order.orderItems)
+        .find(
+          (orderItem) => orderItem.product.productId === item.product.productId
+        )?.product;
+
+      if (!currentProduct) {
+        toast.error("Product not found");
+        return;
+      }
+
+      // Check if requested quantity exceeds stock
+      if (newQuantity > currentProduct.stockQuantity) {
+        toast.warning(
+          `Only ${currentProduct.stockQuantity} items available in stock`
+        );
+        return;
+      }
+
+      // Proceed with update if stock is available
       await updateOrderItemsByOrderId(item.orderItemId, {
         orderId: item.orderId,
         productId: item.product.productId,
@@ -169,6 +197,7 @@ function CartPage() {
     }
   };
 
+  //Hàm cập nhật thông tin user
   const handleEditProfile = async (e) => {
     e.preventDefault();
     try {
@@ -188,9 +217,30 @@ function CartPage() {
         profileImage: currentUser.profileImage,
         money: currentUser.money,
       };
+      
+      // 3. Cập nhật số lượng tồn kho của các sản phẩm
+      console.log("Starting stock updates..."); // Thêm log để debug
+      for (const order of orders) {
+        for (const item of order.orderItems) {
+          console.log(`Updating product ${item.product.productId}: Reducing stock by ${item.quantity}`); // Thêm log để debug
+          
+          try {
+            // Chỉ cần gửi quantity cần giảm, BE sẽ tự tính toán
+            await updateProductQuantity(item.product.productId, {
+              quantity: item.quantity
+            });
+            console.log(`Successfully updated stock for product ${item.product.productId}`);
+          } catch (error) {
+            console.error(`Failed to update stock for product ${item.product.productId}:`, error);
+            throw error;
+          }
+        }
+      }
+
+      // 4. Cập nhật thông tin user
       const userResponse = await updateUserById(userId, updatedUserData);
 
-      // 3. Cập nhật trạng thái đơn hàng
+      // 5. Cập nhật trạng thái đơn hàng
       const orderUpdatePromises = orders.map((order) =>
         updateOrderStatusByOrderId(order.orderId, "PROCESSING")
       );
@@ -201,15 +251,15 @@ function CartPage() {
         setUserInfo(userResponse);
         toast.success("Order placed successfully!");
         setIsCheckoutModalOpen(false);
-        // Redirect to order status or clear cart
-        window.location.href = `/order-status/${userInfo.id}`; // Add this if you want to redirect
+        window.location.href = `/order-status/${userInfo.id}`;
       }
     } catch (error) {
       console.error("Error processing checkout:", error);
-      toast.error("Failed to process checkout");
+      toast.error(error.message || "Failed to process checkout");
     }
   };
 
+  //Hàm cập nhật thông tin user
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -290,7 +340,7 @@ function CartPage() {
                 {orders
                   .reduce((total, order) => total + order.totalPrice, 0)
                   .toLocaleString()}
-                ₫
+                VND
               </span>
             </div>
             <div className="flex justify-between text-lg font-semibold">
@@ -414,7 +464,7 @@ function CartPage() {
                         </h3>
                         <div className="flex items-center mt-2">
                           <button
-                            className="w-8 h-8 border border-gray-300 rounded-full hover:bg-gray-200"
+                            className="w-8 h-8 border border-gray-300 rounded-l-lg hover:bg-gray-200"
                             onClick={() =>
                               handleUpdateQuantity(item, item.quantity - 1)
                             }
@@ -422,9 +472,18 @@ function CartPage() {
                           >
                             -
                           </button>
-                          <span className="mx-4">{item.quantity}</span>
+                          <input
+                            type="number"
+                            min="1"
+                            value={item.quantity}
+                            onChange={(e) => {
+                              const newQuantity = parseInt(e.target.value) || 1;
+                              handleUpdateQuantity(item, newQuantity);
+                            }}
+                            className="w-16 h-8 text-center border-y border-gray-300 focus:outline-none focus:ring-1 focus:ring-pink-500"
+                          />
                           <button
-                            className="w-8 h-8 border border-gray-300 rounded-full hover:bg-gray-200"
+                            className="w-8 h-8 border border-gray-300 rounded-r-lg hover:bg-gray-200"
                             onClick={() =>
                               handleUpdateQuantity(item, item.quantity + 1)
                             }
@@ -435,7 +494,7 @@ function CartPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-semibold text-pink-600">
-                          {item.unitPrice.toLocaleString()}₫
+                          {item.unitPrice.toLocaleString()} VND
                         </p>
                         <button
                           onClick={() => handleDeleteItem(item)}
@@ -464,7 +523,7 @@ function CartPage() {
                       {orders
                         .reduce((total, order) => total + order.totalPrice, 0)
                         .toLocaleString()}
-                      ₫
+                      VND
                     </span>
                   </div>
                   <div className="flex justify-between text-lg font-semibold">
@@ -473,7 +532,7 @@ function CartPage() {
                       {orders
                         .reduce((total, order) => total + order.totalPrice, 0)
                         .toLocaleString()}
-                      ₫
+                      VND
                     </span>
                   </div>
                 </div>

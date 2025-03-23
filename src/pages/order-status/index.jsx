@@ -17,6 +17,7 @@ import {
   FaDollarSign,
 } from "react-icons/fa";
 
+
 function OrderStatusPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState(
@@ -77,12 +78,12 @@ function OrderStatusPage() {
   const handleConfirmReceived = async (orderId) => {
     try {
       await updateOrderStatusByOrderId(orderId, "DELIVERED");
-      toast.success("Đã xác nhận nhận hàng thành công");
+      toast.success("Order confirmed successfully");
       // Refresh lại trang hoặc cập nhật state
       window.location.reload();
     } catch (error) {
       console.error("Error confirming order:", error);
-      toast.error("Không thể xác nhận đơn hàng");
+      toast.error("Cannot confirm order");
     }
   };
 
@@ -268,9 +269,11 @@ function OrderStatusPage() {
 
                 {/* Order Items */}
                 <div className="p-4">
-                  {order.orderItems?.map((item) => (
-                    <div
-                      key={item.orderItemId}
+                  {order.orderItems
+                    ?.filter((item) => !item.deleted)
+                    ?.map((item) => (
+                      <div
+                        key={item.orderItemId}
                       className="flex items-center space-x-4"
                     >
                       <img

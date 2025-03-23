@@ -68,3 +68,14 @@ export const deleteProduct = async (id) => {
     toast.error(error.response.data);
   }
 };
+
+//API update product quantity
+export const updateProductQuantity = async (id, submitData) => {
+  try {
+    const response = await api.put(`products/${id}/stock-quantity?quantity=${submitData.quantity}`);
+    return response.data;
+  } catch (error) {
+    toast.error(error.response.data);
+    throw error;
+  }
+};
