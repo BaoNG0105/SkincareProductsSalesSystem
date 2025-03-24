@@ -1,6 +1,5 @@
 package com.example.SkinCareSellProductSysterm.Repository;
 
-import com.example.SkinCareSellProductSysterm.Entity.CancellationPolicy;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
