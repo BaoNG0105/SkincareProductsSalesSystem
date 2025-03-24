@@ -21,6 +21,18 @@ export const getPromotionById = async (id) => {
   }
 };
 
+//API get promotion by code
+export const getPromotionByCode = async (code) => {
+  try {
+    const response = await api.get(`promotions/code`, {
+      params: { code: code } 
+    });
+    return response.data;
+  } catch (error) {
+    toast.error(error.response.data);
+  }
+};
+
 //API post promotion
 export const postPromotion = async (submitData) => {
   try {

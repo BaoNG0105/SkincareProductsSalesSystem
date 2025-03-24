@@ -1,17 +1,22 @@
 import { useState, useEffect } from "react";
 import { FaTrash } from "react-icons/fa";
 import { Link } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
+import { toast } from "react-toastify";
 import {
   getOrderIdAndStatusByUserId,
   updateOrderItemsByOrderId,
   deleteOrderItemsByOrderItemId,
   updateOrderStatusByOrderId,
+  updateOrderPriceByOrderId,
 } from "../../services/api.order";
-import { updateProductQuantity, getProductById } from "../../services/api.product";
-import { jwtDecode } from "jwt-decode";
-import { toast } from "react-toastify";
+import {
+  updateProductQuantity,
+  getProductById,
+} from "../../services/api.product";
 import { getUserById } from "../../services/api.user";
 import { updateUserById } from "../../services/api.user";
+import { getPromotionByCode } from "../../services/api.promotion";
 
 function CartPage() {
   const [orders, setOrders] = useState([]);
@@ -19,10 +24,12 @@ function CartPage() {
   const [userInfo, setUserInfo] = useState(null);
   const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [promotionCode, setPromotionCode] = useState("");
   const [formData, setFormData] = useState({
     phoneNumber: "",
     address: "",
   });
+  const [appliedPromotion, setAppliedPromotion] = useState(null);
 
   useEffect(() => {
     //Hàm lấy order
@@ -34,6 +41,7 @@ function CartPage() {
       const decoded = jwtDecode(token);
       const userId = decoded.id;
       try {
+        //Lấy orderId và status
         const orderData = await getOrderIdAndStatusByUserId(userId);
         if (orderData && orderData.length > 0) {
           // Lọc ra các order có orderItems chưa bị xóa (deleted: false)
@@ -67,6 +75,7 @@ function CartPage() {
     fetchOrders();
   }, []);
 
+  //Hàm lấy thông tin user
   useEffect(() => {
     const fetchUserInfo = async () => {
       const token = localStorage.getItem("token");
@@ -124,7 +133,7 @@ function CartPage() {
         discountAmount: 0,
       });
 
-      //Hàm cập nhật lại order
+      //cập nhật lại order
       setOrders(
         orders.map((order) => ({
           ...order,
@@ -197,8 +206,8 @@ function CartPage() {
     }
   };
 
-  //Hàm cập nhật thông tin user
-  const handleEditProfile = async (e) => {
+  //Hàm cập nhật thông tin checkout
+  const handleEditCheckout = async (e) => {
     e.preventDefault();
     try {
       const token = localStorage.getItem("token");
@@ -210,7 +219,7 @@ function CartPage() {
         for (const item of order.orderItems) {
           // gọi hàm getProductById để lấy thông tin sản phẩm hiện tại
           const currentProduct = await getProductById(item.product.productId);
-          
+
           if (!currentProduct) {
             toast.error(`Product ${item.product.productName} not found`);
             return;
@@ -237,16 +246,19 @@ function CartPage() {
         profileImage: currentUser.profileImage,
         money: currentUser.money,
       };
-      
+
       // 3. Cập nhật số lượng tồn kho của các sản phẩm
       for (const order of orders) {
         for (const item of order.orderItems) {
           try {
             await updateProductQuantity(item.product.productId, {
-              quantity: item.quantity
+              quantity: item.quantity,
             });
           } catch (error) {
-            console.error(`Failed to update stock for product ${item.product.productId}:`, error);
+            console.error(
+              `Failed to update stock for product ${item.product.productId}:`,
+              error
+            );
             throw error;
           }
         }
@@ -283,14 +295,85 @@ function CartPage() {
     }));
   };
 
-  // Replace editProfileModal with checkoutModal
+  // Hàm áp dụng promotion code
+  const handlePromotionCode = async () => {
+    try {
+      const promotion = await getPromotionByCode(promotionCode);
+
+      if (!promotion) {
+        toast.error("Invalid promotion code");
+        return;
+      }
+
+      // Calculate new total price with discount for each order
+      const updatedOrders = await Promise.all(
+        orders.map(async (order) => {
+          const originalPrice = order.totalPrice;
+          const discountAmount =
+            (originalPrice * promotion.discountPercentage) / 100;
+          const newTotalPrice = originalPrice - discountAmount;
+
+          // Update order price in database
+          await updateOrderPriceByOrderId(order.orderId, newTotalPrice);
+
+          // Return updated order object
+          return {
+            ...order,
+            originalPrice: originalPrice,
+            totalPrice: newTotalPrice,
+            discountAmount: discountAmount,
+          };
+        })
+      );
+
+      setOrders(updatedOrders);
+      setAppliedPromotion(promotion);
+      toast.success(
+        `Applied ${promotion.discountPercentage}% discount successfully!`
+      );
+      setPromotionCode(""); // Clear input after successful application
+    } catch (error) {
+      toast.error("Failed to apply promotion code");
+      console.error("Error applying promotion:", error);
+    }
+  };
+
+  // Hàm xóa promotion
+  const handleRemovePromotion = async () => {
+    try {
+      // Khôi phục giá gốc cho tất cả orders
+      const restoredOrders = await Promise.all(
+        orders.map(async (order) => {
+          // Cập nhật lại giá gốc trong database
+          await updateOrderPriceByOrderId(order.orderId, order.originalPrice);
+
+          // Trả về order với giá gốc
+          return {
+            ...order,
+            totalPrice: order.originalPrice,
+            originalPrice: null,
+            discountAmount: 0,
+          };
+        })
+      );
+
+      setOrders(restoredOrders);
+      setAppliedPromotion(null); // Xóa promotion đang áp dụng
+      toast.success("Removed promotion code successfully!");
+    } catch (error) {
+      toast.error("Failed to remove promotion code");
+      console.error("Error removing promotion:", error);
+    }
+  };
+
+  //Checkout modal
   const checkoutModal = isCheckoutModalOpen && (
     <div className="fixed inset-0 bg-pink-100 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-[500px] max-h-[90vh] overflow-y-auto">
         <h2 className="text-xl text-center text-pink-600 font-semibold mb-4">
           Checkout Information
         </h2>
-        <form onSubmit={handleEditProfile} className="space-y-4">
+        <form onSubmit={handleEditCheckout} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Full Name
@@ -329,31 +412,16 @@ function CartPage() {
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Promotion Code
-            </label>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Enter your coupon code"
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-200"
-              />
-              <button
-                type="button"
-                className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600"
-              >
-                OK
-              </button>
-            </div>
-          </div>
-
           <div className="border-t border-gray-200 pt-4 mt-4">
             <div className="flex justify-between mb-2">
               <span className="text-gray-600">Subtotal</span>
               <span className="font-semibold">
                 {orders
-                  .reduce((total, order) => total + order.totalPrice, 0)
+                  .reduce(
+                    (total, order) =>
+                      total + (order.originalPrice || order.totalPrice),
+                    0
+                  )
                   .toLocaleString()}
                 VND
               </span>
@@ -430,6 +498,7 @@ function CartPage() {
     </div>
   );
 
+  //Giao diện cart
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="container mx-auto px-4 py-8">
@@ -531,24 +600,111 @@ function CartPage() {
                   Order Summary
                 </h2>
 
-                <div className="border-t border-gray-200 pt-4">
-                  <div className="flex justify-between mb-2">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="font-semibold">
-                      {orders
-                        .reduce((total, order) => total + order.totalPrice, 0)
-                        .toLocaleString()}
-                      VND
-                    </span>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Promotion Code
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={promotionCode}
+                      onChange={(e) => setPromotionCode(e.target.value)}
+                      placeholder="Enter your coupon code"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-200"
+                    />
+                    <button
+                      type="button"
+                      onClick={handlePromotionCode}
+                      className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600"
+                    >
+                      OK
+                    </button>
                   </div>
-                  <div className="flex justify-between text-lg font-semibold">
-                    <span>Total</span>
-                    <span className="text-pink-600">
-                      {orders
-                        .reduce((total, order) => total + order.totalPrice, 0)
-                        .toLocaleString()}
-                      VND
-                    </span>
+                </div>
+
+                <div className="border-t border-gray-200 mt-4 pt-4">
+                  {appliedPromotion && (
+                    <div className="mb-4 p-3 bg-green-50 rounded-lg">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <div className="text-green-700 font-medium mb-1">
+                            Applied Promotion: {appliedPromotion.code}
+                          </div>
+                          <div className="text-sm text-green-600">
+                            {appliedPromotion.description}
+                          </div>
+                        </div>
+                        <button
+                          onClick={handleRemovePromotion}
+                          className="text-red-500 hover:text-red-700 text-sm"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Subtotal</span>
+                      <span className="font-semibold">
+                        {orders
+                          .reduce(
+                            (total, order) =>
+                              total + (order.originalPrice || order.totalPrice),
+                            0
+                          )
+                          .toLocaleString()}{" "}
+                        VND
+                      </span>
+                    </div>
+
+                    {appliedPromotion && (
+                      <div className="flex justify-between text-green-600">
+                        <span>
+                          Discount ({appliedPromotion.discountPercentage}%)
+                        </span>
+                        <span>
+                          -
+                          {orders
+                            .reduce(
+                              (total, order) =>
+                                total + (order.discountAmount || 0),
+                              0
+                            )
+                            .toLocaleString()}{" "}
+                          VND
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="flex justify-between text-lg font-semibold pt-2 border-t border-gray-200">
+                      <span>Total</span>
+                      <div className="text-right">
+                        {appliedPromotion && (
+                          <span className="text-sm text-gray-500 line-through block">
+                            {orders
+                              .reduce(
+                                (total, order) =>
+                                  total +
+                                  (order.originalPrice || order.totalPrice),
+                                0
+                              )
+                              .toLocaleString()}{" "}
+                            VND
+                          </span>
+                        )}
+                        <span className="text-pink-600">
+                          {orders
+                            .reduce(
+                              (total, order) => total + order.totalPrice,
+                              0
+                            )
+                            .toLocaleString()}{" "}
+                          VND
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 

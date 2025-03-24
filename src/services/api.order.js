@@ -73,6 +73,16 @@ export const updateOrderStatusByOrderId = async (orderId, status) => {
   }
 };
 
+// API update orderPrice by OrderId
+export const updateOrderPriceByOrderId = async (orderId, price) => {
+  try {
+    const response = await api.put(`order/${orderId}/price?price=${price}`);
+    return response.data;
+  } catch (error) {
+    toast.error(error.response.data);
+  }
+};
+
 //API get order by status
 export const getOrderByStatus = async (status) => {
   try {
