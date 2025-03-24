@@ -5,6 +5,7 @@ import {
   getOrderByUserId,
   updateOrderStatusByOrderId,
 } from "../../services/api.order";
+import { updateProductQuantity } from "../../services/api.product";
 import { toast } from "react-toastify";
 import {
   FaClock,
@@ -90,11 +91,29 @@ function OrderStatusPage() {
   // Confirm cancel order
   const handleConfirmCancel = async () => {
     try {
-      await updateOrderStatusByOrderId(currentOrderId, "CANCELLED");
-      toast.success("Successfully canceled order");
-      setIsCancelModalOpen(false);
-      // Refresh lại trang hoặc cập nhật state
-      window.location.reload();
+      // 1. Gọi API để update status thành CANCELLED
+      const response = await updateOrderStatusByOrderId(currentOrderId, "CANCELLED");
+
+      if (response) {
+        // 2. Hoàn lại số lượng cho các sản phẩm trong order
+        for (const orderItem of response.orderItems) {
+          try {
+            // Thêm dấu - vào quantity để tăng stockQuantity
+            await updateProductQuantity(orderItem.product.productId, {
+              quantity: -orderItem.quantity
+            });
+            console.log(`Successfully restored stock for product ${orderItem.product.productId}`);
+          } catch (error) {
+            console.error(`Failed to restore stock for product ${orderItem.product.productId}:`, error);
+            throw error;
+          }
+        }
+
+        toast.success("Successfully canceled order");
+        setIsCancelModalOpen(false);
+        // Refresh lại trang hoặc cập nhật state
+        window.location.reload();
+      }
     } catch (error) {
       console.error("Error canceling order:", error);
       toast.error("Cannot cancel order");

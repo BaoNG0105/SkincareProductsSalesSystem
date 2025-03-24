@@ -1,13 +1,17 @@
-import { useState, useEffect } from 'react';
-import { getOrderByStatus, updateOrderStatusByOrderId } from '../../../services/api.order';
-import { FiCheck, FiX } from 'react-icons/fi';
-import { HiOutlineShoppingBag } from 'react-icons/hi';
-import { BsSearch } from 'react-icons/bs';
-import { toast } from 'react-toastify';
+import { useState, useEffect } from "react";
+import {
+  getOrderByStatus,
+  updateOrderStatusByOrderId,
+} from "../../../services/api.order";
+import { updateProductQuantity } from "../../../services/api.product";
+import { FiCheck, FiX } from "react-icons/fi";
+import { HiOutlineShoppingBag } from "react-icons/hi";
+import { BsSearch } from "react-icons/bs";
+import { toast } from "react-toastify";
 
 function OrderPage() {
   const [orders, setOrders] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
     fetchOrders();
@@ -17,14 +21,14 @@ function OrderPage() {
     try {
       const response = await getOrderByStatus("processing");
       if (response) {
-        const formattedOrders = response.map(order => ({
+        const formattedOrders = response.map((order) => ({
           key: order.orderId.toString(),
-          name: order.customer?.userName || 'N/A',
+          name: order.customer?.userName || "N/A",
           totalPrice: order.totalPrice,
           date: new Date(order.createdAt).toLocaleDateString(),
           status: order.status,
-          address: order.customer?.address || 'N/A',
-          avatar: order.customer?.avatar || "default_avatar_url"
+          address: order.customer?.address || "N/A",
+          avatar: order.customer?.avatar || "default_avatar_url",
         }));
         setOrders(formattedOrders);
       }
@@ -51,14 +55,33 @@ function OrderPage() {
 
   const handleRefuseOrder = async (orderId) => {
     // Hiện confirm alert trước khi refuse
-    const isConfirmed = window.confirm("Are you sure you want to refuse this order?");
-    
+    const isConfirmed = window.confirm(
+      "Are you sure you want to refuse this order?"
+    );
+
     if (isConfirmed) {
       try {
+        // Tìm order cần hủy để lấy thông tin orderItems
+        // const orderToRefuse = orders.find(order => order.key === orderId);
+        
         // Gọi API để update status thành cancelled
         const response = await updateOrderStatusByOrderId(orderId, "cancelled");
-        
+
         if (response) {
+          // Hoàn lại số lượng cho các sản phẩm trong order
+          for (const orderItem of response.orderItems) {
+            try {
+              // Thêm dấu - vào quantity để tăng stockQuantity
+              await updateProductQuantity(orderItem.product.productId, {
+                quantity: -orderItem.quantity
+              });
+              console.log(`Successfully restored stock for product ${orderItem.product.productId}`);
+            } catch (error) {
+              console.error(`Failed to restore stock for product ${orderItem.product.productId}:`, error);
+              throw error;
+            }
+          }
+
           // Refresh lại danh sách orders
           await fetchOrders();
           toast.success("Order has been refused successfully");
@@ -70,9 +93,10 @@ function OrderPage() {
     }
   };
 
-  const filteredOrders = orders.filter(order => 
-    order.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    order.address.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredOrders = orders.filter(
+    (order) =>
+      order.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      order.address.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -81,9 +105,11 @@ function OrderPage() {
       <div className="flex justify-between items-center mb-6">
         <div className="flex items-center gap-3">
           <HiOutlineShoppingBag className="text-3xl text-indigo-600" />
-          <h1 className="text-2xl font-bold text-gray-800">Processing Orders</h1>
+          <h1 className="text-2xl font-bold text-gray-800">
+            Processing Orders
+          </h1>
         </div>
-        
+
         {/* Search Bar */}
         <div className="relative">
           <input
@@ -103,31 +129,45 @@ function OrderPage() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Price</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Address</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Customer
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Total Price
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Date
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Address
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {filteredOrders.map((order) => (
-                <tr key={order.key} className="hover:bg-gray-50 transition-colors">
+                <tr
+                  key={order.key}
+                  className="hover:bg-gray-50 transition-colors"
+                >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <img 
-                        src={order.avatar} 
-                        alt={order.name}
-                        className="h-10 w-10 rounded-full object-cover"
-                      />
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">{order.name}</div>
+                        <div className="text-sm font-medium text-gray-900">
+                          {order.name}
+                        </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-semibold text-green-600">{order.totalPrice} VND</div>
+                    <div className="text-sm font-semibold text-green-600">
+                      {order.totalPrice} VND
+                    </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-600">{order.date}</div>
