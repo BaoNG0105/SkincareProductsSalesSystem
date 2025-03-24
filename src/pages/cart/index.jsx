@@ -7,7 +7,7 @@ import {
   deleteOrderItemsByOrderItemId,
   updateOrderStatusByOrderId,
 } from "../../services/api.order";
-import { updateProductQuantity } from "../../services/api.product";
+import { updateProductQuantity, getProductById } from "../../services/api.product";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import { getUserById } from "../../services/api.user";
@@ -205,6 +205,26 @@ function CartPage() {
       const decoded = jwtDecode(token);
       const userId = decoded.id;
 
+      // Kiểm tra stockQuantity của product trước khi xử lý checkout
+      for (const order of orders) {
+        for (const item of order.orderItems) {
+          // gọi hàm getProductById để lấy thông tin sản phẩm hiện tại
+          const currentProduct = await getProductById(item.product.productId);
+          
+          if (!currentProduct) {
+            toast.error(`Product ${item.product.productName} not found`);
+            return;
+          }
+          // Kiểm tra stockQuantity của product so với quantity của item
+          if (item.quantity > currentProduct.stockQuantity) {
+            toast.error(
+              `Not enough stock for ${item.product.productName}. Available: ${currentProduct.stockQuantity}`
+            );
+            return;
+          }
+        }
+      }
+
       // 1. Lấy thông tin user hiện tại
       const currentUser = await getUserById(userId);
 
@@ -219,17 +239,12 @@ function CartPage() {
       };
       
       // 3. Cập nhật số lượng tồn kho của các sản phẩm
-      console.log("Starting stock updates..."); // Thêm log để debug
       for (const order of orders) {
         for (const item of order.orderItems) {
-          console.log(`Updating product ${item.product.productId}: Reducing stock by ${item.quantity}`); // Thêm log để debug
-          
           try {
-            // Chỉ cần gửi quantity cần giảm, BE sẽ tự tính toán
             await updateProductQuantity(item.product.productId, {
               quantity: item.quantity
             });
-            console.log(`Successfully updated stock for product ${item.product.productId}`);
           } catch (error) {
             console.error(`Failed to update stock for product ${item.product.productId}:`, error);
             throw error;
