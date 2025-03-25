@@ -5,6 +5,8 @@ import {
   getOrderIdAndStatusByUserId,
   addOrderId,
   addOrderItems,
+  getOrderItemsByOrderId,
+  updateOrderItemsByOrderId,
 } from "../../services/api.order";
 import { toast } from "react-toastify";
 import { FaExchangeAlt, FaShoppingCart, FaMoneyBillWave } from "react-icons/fa";
@@ -77,39 +79,60 @@ const ProductDetailPage = () => {
         toast.error("Please log in to add items to your cart.");
         return;
       }
-      // Giải mã token để lấy customerId
+      // Decode token to get customerId
       const decoded = jwtDecode(token);
       const customerId = decoded.id;
 
       // Step 1: Check if orderId exists and status is PENDING
       const order = await getOrderIdAndStatusByUserId(customerId);
       console.log("Existing order:", order);
+
+      let currentOrderId;
+
       // Step 2: If no orderId exists, create a new one
       if (!order) {
         const newOrder = await addOrderId({
           userId: customerId,
           totalPrice: 0,
         });
+        currentOrderId = newOrder.orderId;
         await addOrderItems({
-          orderId: newOrder.orderId,
+          orderId: currentOrderId,
           productId: product.productId,
           quantity: quantity,
           unitPrice: product.price,
           discountAmount: 0,
         });
       } else {
-        // Kiểm tra order có tồn tại và có phần tử không
+        // Check if order exists and has elements
         if (!order || !order[0]) {
           throw new Error("Invalid order data");
         }
-
-        await addOrderItems({
-          orderId: order[0].orderId,
-          productId: product.productId,
-          quantity: quantity,
-          unitPrice: product.price,
-          discountAmount: 0,
-        });
+        
+        currentOrderId = order[0].orderId;
+        
+        // Get all order items for this order
+        const orderItems = await getOrderItemsByOrderId(currentOrderId);
+        
+        // Check if product already exists in order
+        const existingOrderItem = orderItems.find(item => item.product.productId === product.productId);
+        
+        if (existingOrderItem) {
+          // Update existing order item quantity
+          await updateOrderItemsByOrderId(existingOrderItem.orderItemId, {
+            ...existingOrderItem,
+            quantity: existingOrderItem.quantity + quantity
+          });
+        } else {
+          // Add new order item
+          await addOrderItems({
+            orderId: currentOrderId,
+            productId: product.productId,
+            quantity: quantity,
+            unitPrice: product.price,
+            discountAmount: 0,
+          });
+        }
       }
 
       toast.success("Product added to cart!");
@@ -172,6 +195,7 @@ const ProductDetailPage = () => {
       </div>
     );
 
+  //Hàm hiển thị sản phẩm
   return (
     <div className="bg-gray-100 min-h-screen p-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">

@@ -33,6 +33,16 @@ export const addOrderId = async (submitData) => {
   }
 };
 
+// API get order-items by orderId
+export const getOrderItemsByOrderId = async (orderId) => {
+  try {
+    const response = await api.get(`order-items/order/${orderId}`);
+    return response.data;
+  } catch (error) {
+    toast.error(error.response.data);
+  }
+};
+
 // API add order-items to add product to cart
 export const addOrderItems = async (submitData) => {
   try {
