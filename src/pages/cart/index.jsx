@@ -298,6 +298,15 @@ function CartPage() {
   // Hàm áp dụng promotion code
   const handlePromotionCode = async () => {
     try {
+      // Khôi phục giá gốc cho order trước khi áp dụng promotion mới
+      const restoredOrders = orders.map((order) => ({
+        ...order,
+        totalPrice: order.originalPrice || order.totalPrice, // Khôi phục giá gốc nếu có
+        discountAmount: 0,
+      }));
+
+      setOrders(restoredOrders);
+
       const promotion = await getPromotionByCode(promotionCode);
 
       if (!promotion) {
@@ -305,40 +314,40 @@ function CartPage() {
         return;
       }
 
-      // Calculate new total price with discount for each order
+      // Tính toán giá mới với promotion
       const updatedOrders = await Promise.all(
-        orders.map(async (order) => {
+        restoredOrders.map(async (order) => {
           const originalPrice = order.totalPrice;
           const discountAmount =
             (originalPrice * promotion.discountPercentage) / 100;
           const newTotalPrice = originalPrice - discountAmount;
 
-          // Update order price in database
+          // Gọi hàm cập nhật giá trong database
           await updateOrderPriceByOrderId(order.orderId, newTotalPrice);
 
-          // Return updated order object
+          // Trả về order đã cập nhật
           return {
             ...order,
-            originalPrice: originalPrice,
-            totalPrice: newTotalPrice,
-            discountAmount: discountAmount,
+            originalPrice: originalPrice, // Lưu lại giá gốc
+            totalPrice: newTotalPrice, // Cập nhật giá mới
+            discountAmount: discountAmount, // Cập nhật số tiền giảm giá
           };
         })
       );
 
       setOrders(updatedOrders);
-      setAppliedPromotion(promotion);
+      setAppliedPromotion(promotion); // Lưu thông tin promotion đang áp dụng
       toast.success(
         `Applied ${promotion.discountPercentage}% discount successfully!`
       );
-      setPromotionCode(""); // Clear input after successful application
+      setPromotionCode(""); // Xóa mã promotion sau khi áp dụng thành công
     } catch (error) {
       toast.error("Failed to apply promotion code");
       console.error("Error applying promotion:", error);
     }
   };
 
-  // Hàm xóa promotion
+  // Hàm remove promotion
   const handleRemovePromotion = async () => {
     try {
       // Khôi phục giá gốc cho tất cả orders
