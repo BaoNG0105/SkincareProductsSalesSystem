@@ -1,6 +1,5 @@
 package com.example.SkinCareSellProductSysterm.Service;
 
-import com.example.SkinCareSellProductSysterm.DTO.FAQRequest;
 import com.example.SkinCareSellProductSysterm.Repository.FAQRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
