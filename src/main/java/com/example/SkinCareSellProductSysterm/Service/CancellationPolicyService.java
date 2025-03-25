@@ -1,7 +1,5 @@
 package com.example.SkinCareSellProductSysterm.Service;
 
-import com.example.SkinCareSellProductSysterm.DTO.CancellationPolicyRequest;
-import com.example.SkinCareSellProductSysterm.Repository.CancellationPolicyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
