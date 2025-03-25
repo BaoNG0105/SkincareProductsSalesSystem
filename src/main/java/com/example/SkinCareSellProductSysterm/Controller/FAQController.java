@@ -1,7 +1,6 @@
 package com.example.SkinCareSellProductSysterm.Controller;
 
 import com.example.SkinCareSellProductSysterm.DTO.FAQRequest;
-import com.example.SkinCareSellProductSysterm.Entity.FAQ;
 import com.example.SkinCareSellProductSysterm.Service.FAQService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
