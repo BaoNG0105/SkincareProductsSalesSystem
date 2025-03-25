@@ -17,6 +17,7 @@ import {
 import { getUserById } from "../../services/api.user";
 import { updateUserById } from "../../services/api.user";
 import { getPromotionByCode } from "../../services/api.promotion";
+import { getPaymentByOrderId } from "../../services/api.payment";
 
 function CartPage() {
   const [orders, setOrders] = useState([]);
@@ -217,14 +218,12 @@ function CartPage() {
       // Kiểm tra stockQuantity của product trước khi xử lý checkout
       for (const order of orders) {
         for (const item of order.orderItems) {
-          // gọi hàm getProductById để lấy thông tin sản phẩm hiện tại
           const currentProduct = await getProductById(item.product.productId);
 
           if (!currentProduct) {
             toast.error(`Product ${item.product.productName} not found`);
             return;
           }
-          // Kiểm tra stockQuantity của product so với quantity của item
           if (item.quantity > currentProduct.stockQuantity) {
             toast.error(
               `Not enough stock for ${item.product.productName}. Available: ${currentProduct.stockQuantity}`
@@ -276,9 +275,22 @@ function CartPage() {
 
       if (userResponse) {
         setUserInfo(userResponse);
-        toast.success("Order placed successfully!");
         setIsCheckoutModalOpen(false);
-        window.location.href = `/order-status/${userInfo.id}`;
+
+        // Chỉ xử lý thanh toán online
+        if (paymentMethod === "online") {
+          // Lấy URL thanh toán cho đơn hàng đầu tiên
+          const paymentResponse = await getPaymentByOrderId(orders[0].orderId);
+          if (paymentResponse) {
+            // Truy cập trực tiếp vào response text (URL)
+            window.location.href = paymentResponse;
+          } else {
+            toast.error("Payment URL not found");
+          }
+        } else {
+          // Nếu là COD thì chỉ hiển thị thông báo thành công
+          toast.success("Order placed successfully!");
+        }
       }
     } catch (error) {
       console.error("Error processing checkout:", error);
