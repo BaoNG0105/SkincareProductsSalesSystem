@@ -28,14 +28,16 @@ public class JwtService {
         // properties => claims
         Map<String, Object> claims = new HashMap<>();
 
-        // Đưa các thuộc tính vào claims
-        claims.put("username",user.getUsername());
-        claims.put("id", user.getId());
+//        // Đưa các thuộc tính vào claims
+//        claims.put("username",user.getUsername());
+//        claims.put("id", user.getId());
 
         Date currentTime = new Date(System.currentTimeMillis());
         Date expirationTime = new Date(System.currentTimeMillis() + expiration);
         return Jwts.builder()
                 .setClaims(claims) // Các thuộc tính
+                .claim("id", user.getId())
+                .claim("email", user.getEmail())
                 .setSubject(user.getUsername())
                 .setIssuedAt(currentTime) // Thời gian tạo
                 .setExpiration(expirationTime) // Thời gian hết hạn
