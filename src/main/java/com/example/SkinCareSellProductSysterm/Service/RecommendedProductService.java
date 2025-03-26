@@ -70,6 +70,14 @@ public class RecommendedProductService {
 
     }
 
+    public List<RecommendedProduct> getRecommendedProductsBySkinTypeId(Long skinTypeId) {
+
+        List<RecommendedProduct> productList = recommendedProductRepository.findAllBySkinType_SkinTypeIdAndIsDeletedFalse(skinTypeId);
+
+        return productList;
+
+    }
+
     public RecommendedProduct updateRecommendedProduct(Long id, RecommendedProductRequest request) {
         RecommendedProduct existing = recommendedProductRepository.findByRecommendationIdAndIsDeletedFalse(id)
                 .orElseThrow(() -> new RuntimeException("RecommendedProduct not found with id " + id));
