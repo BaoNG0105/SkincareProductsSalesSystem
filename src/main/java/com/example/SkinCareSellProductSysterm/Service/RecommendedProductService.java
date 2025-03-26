@@ -3,8 +3,10 @@ package com.example.SkinCareSellProductSysterm.Service;
 import com.example.SkinCareSellProductSysterm.DTO.RecommendedProductRequest;
 import com.example.SkinCareSellProductSysterm.Entity.Product;
 import com.example.SkinCareSellProductSysterm.Entity.RecommendedProduct;
+import com.example.SkinCareSellProductSysterm.Entity.SkinType;
 import com.example.SkinCareSellProductSysterm.Repository.ProductRepository;
 import com.example.SkinCareSellProductSysterm.Repository.RecommendedProductRepository;
+import com.example.SkinCareSellProductSysterm.Repository.SkinTypeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
