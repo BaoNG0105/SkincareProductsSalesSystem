@@ -154,11 +154,5 @@ public class Product {
         this.status = status;
     }
 
-    public List<FAQ> getFaqs() {
-        return faqs;
-    }
-
-    public void setFaqs(List<FAQ> faqs) {
-        this.faqs = faqs;
-    }
 }
+
