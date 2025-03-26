@@ -64,13 +64,10 @@ public class Product {
 
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<FAQ> faqs;
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<RatingFeedback> ratingFeedbacks;
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RecommendedProduct> recommendedProducts;
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SalesReportDetail> salesReportDetails;
 
     // Nối bảng Product với bảng OrderItem
     @OneToMany(mappedBy = "product")
