@@ -11,6 +11,7 @@ import java.util.Optional;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Order> findAllByIsDeletedFalse();
+    List<Order> findByCustomer_IdAndIsDeletedFalse(Long customerId);
     Optional<Order> findByOrderIdAndIsDeletedFalse(Long orderId);
     List<Order> findByOrderStatusAndIsDeletedFalse(OrderStatus orderStatus);
 }
