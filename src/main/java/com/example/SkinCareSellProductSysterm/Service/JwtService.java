@@ -36,10 +36,10 @@ public class JwtService {
         Date expirationTime = new Date(System.currentTimeMillis() + expiration);
         return Jwts.builder()
                 .setClaims(claims) // Các thuộc tính
-                .claim("user", user.getUsername())
-                .claim("role", user.getRole())
                 .claim("id", user.getId())
                 .claim("email", user.getEmail())
+                .claim("user", user.getUsername())
+                .claim("role", user.getRole())
                 .setSubject(user.getUsername())
                 .setIssuedAt(currentTime) // Thời gian tạo
                 .setExpiration(expirationTime) // Thời gian hết hạn
