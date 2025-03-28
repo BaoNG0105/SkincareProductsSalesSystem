@@ -38,6 +38,7 @@ public class SkinType {
     @OneToMany(mappedBy = "finalSkinType", fetch = FetchType.LAZY)
     private List<TestResults> testResults;
 
+    // Getter and Setter
     public Long getSkinTypeId() {
         return skinTypeId;
     }

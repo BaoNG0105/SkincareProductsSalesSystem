@@ -95,7 +95,8 @@ public class User implements UserDetails {
     public void setGoogleAccountId(String googleAccountId) {
         this.googleAccountId = googleAccountId;
     }
-// Getter and Setter
+
+    // Getter and Setter
 
     public Long getId() {
         return id;
