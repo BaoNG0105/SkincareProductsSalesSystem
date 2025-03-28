@@ -14,6 +14,8 @@ public class RecommendedProductRequest {
     @Size(max = 255, message = "Recommendation reason must be at most 255 characters")
     private String recommendationReason;
 
+    // Getter and Setter
+
     public Long getProductId() {
         return productId;
     }

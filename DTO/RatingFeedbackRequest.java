@@ -22,6 +22,7 @@ public class RatingFeedbackRequest {
     @Column(name = "comment", columnDefinition = "TEXT")
     private String comment;
 
+    // Getter and Setter
     public long getUserId() {
         return userId;
     }
