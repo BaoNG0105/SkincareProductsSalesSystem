@@ -7,10 +7,6 @@ import java.time.LocalDate;
 
 public class UserRequest {
 
-
-
-
-
     @Column(name = "password_hash", nullable = false, columnDefinition = "TEXT")
     private String passwordHash;  // TEXT NOT NULL
 
@@ -49,8 +45,6 @@ public class UserRequest {
     }
 
 
-
-
     public String getGender() {
         return gender;
     }
@@ -58,9 +52,6 @@ public class UserRequest {
     public void setGender(String gender) {
         this.gender = gender;
     }
-
-
-
 
     public LocalDate getDateOfBirth() {
         return dateOfBirth;

@@ -12,7 +12,7 @@ public class SkinTypeRequest {
     private String skinType;
 
 
-
+    // Getter and Setter
     public String getSkinType() {
         return skinType;
     }

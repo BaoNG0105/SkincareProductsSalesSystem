@@ -47,5 +47,5 @@ public class SkinCareRoutineRequest {
         this.description = description;
     }
 
-
+    // Getter and Setter
 }
