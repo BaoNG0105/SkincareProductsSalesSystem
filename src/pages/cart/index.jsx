@@ -1,42 +1,27 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect } from "react";
 import { FaTrash } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import {
   getOrderIdAndStatusByUserId,
   updateOrderItemsByOrderId,
   deleteOrderItemsByOrderItemId,
-  updateOrderStatusByOrderId,
-  updateOrderPriceByOrderId,
 } from "../../services/api.order";
-import {
-  updateProductQuantity,
-  getProductById,
-} from "../../services/api.product";
-import { getUserById } from "../../services/api.user";
-import { updateUserById } from "../../services/api.user";
-import { getPromotionByCode } from "../../services/api.promotion";
-import { getPaymentByOrderId } from "../../services/api.payment";
 
 function CartPage() {
   const [orders, setOrders] = useState([]);
   const [isCartEmpty, setIsCartEmpty] = useState(true);
-  const [userInfo, setUserInfo] = useState(null);
-  const [isCheckoutModalOpen, setIsCheckoutModalOpen] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState("");
-  const [promotionCode, setPromotionCode] = useState("");
-  const [formData, setFormData] = useState({
-    phoneNumber: "",
-    address: "",
-  });
-  const [appliedPromotion, setAppliedPromotion] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     //Hàm lấy order
     const fetchOrders = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
+        toast.error("Please login to view cart");
+        navigate("/login");
         return;
       }
       const decoded = jwtDecode(token);
@@ -74,24 +59,7 @@ function CartPage() {
     };
 
     fetchOrders();
-  }, []);
 
-  //Hàm lấy thông tin user
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-      const decoded = jwtDecode(token);
-      const userId = decoded.id;
-      try {
-        const userData = await getUserById(userId);
-        setUserInfo(userData);
-      } catch (error) {
-        console.error("Failed to fetch user info:", error);
-      }
-    };
-
-    fetchUserInfo();
   }, []);
 
   //Hàm update quantity
@@ -207,319 +175,6 @@ function CartPage() {
     }
   };
 
-  //Hàm cập nhật thông tin checkout
-  const handleEditCheckout = async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem("token");
-      const decoded = jwtDecode(token);
-      const userId = decoded.id;
-
-      // Kiểm tra stockQuantity của product trước khi xử lý checkout
-      for (const order of orders) {
-        for (const item of order.orderItems) {
-          const currentProduct = await getProductById(item.product.productId);
-
-          if (!currentProduct) {
-            toast.error(`Product ${item.product.productName} not found`);
-            return;
-          }
-          if (item.quantity > currentProduct.stockQuantity) {
-            toast.error(
-              `Not enough stock for ${item.product.productName}. Available: ${currentProduct.stockQuantity}`
-            );
-            return;
-          }
-        }
-      }
-
-      // 1. Lấy thông tin user hiện tại
-      const currentUser = await getUserById(userId);
-
-      // 2. Cập nhật thông tin user với dữ liệu mới kết hợp dữ liệu cũ
-      const updatedUserData = {
-        gender: currentUser.gender,
-        dateOfBirth: formData.dateOfBirth || currentUser.dateOfBirth,
-        address: formData.address,
-        phoneNumber: formData.phoneNumber,
-        profileImage: currentUser.profileImage,
-        money: currentUser.money,
-      };
-
-      // 3. Cập nhật số lượng tồn kho của các sản phẩm
-      for (const order of orders) {
-        for (const item of order.orderItems) {
-          try {
-            await updateProductQuantity(item.product.productId, {
-              quantity: item.quantity,
-            });
-          } catch (error) {
-            console.error(
-              `Failed to update stock for product ${item.product.productId}:`,
-              error
-            );
-            throw error;
-          }
-        }
-      }
-
-      // 4. Cập nhật thông tin user
-      const userResponse = await updateUserById(userId, updatedUserData);
-
-      // 5. Cập nhật trạng thái đơn hàng
-      const orderUpdatePromises = orders.map((order) =>
-        updateOrderStatusByOrderId(order.orderId, "PROCESSING")
-      );
-
-      await Promise.all(orderUpdatePromises);
-
-      if (userResponse) {
-        setUserInfo(userResponse);
-        setIsCheckoutModalOpen(false);
-
-        // Chỉ xử lý thanh toán online
-        if (paymentMethod === "online") {
-          // Lấy URL thanh toán cho đơn hàng đầu tiên
-          const paymentResponse = await getPaymentByOrderId(orders[0].orderId);
-          if (paymentResponse) {
-            // Truy cập trực tiếp vào response text (URL)
-            window.location.href = paymentResponse;
-          } else {
-            toast.error("Payment URL not found");
-          }
-        } else {
-          // Nếu là COD thì chỉ hiển thị thông báo thành công
-          toast.success("Order placed successfully!");
-        }
-      }
-    } catch (error) {
-      console.error("Error processing checkout:", error);
-      toast.error(error.message || "Failed to process checkout");
-    }
-  };
-
-  //Hàm cập nhật thông tin user
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  // Hàm áp dụng promotion code
-  const handlePromotionCode = async () => {
-    try {
-      // Khôi phục giá gốc cho order trước khi áp dụng promotion mới
-      const restoredOrders = orders.map((order) => ({
-        ...order,
-        totalPrice: order.originalPrice || order.totalPrice, // Khôi phục giá gốc nếu có
-        discountAmount: 0,
-      }));
-
-      setOrders(restoredOrders);
-
-      const promotion = await getPromotionByCode(promotionCode);
-
-      if (!promotion) {
-        toast.error("Invalid promotion code");
-        return;
-      }
-
-      // Tính toán giá mới với promotion
-      const updatedOrders = await Promise.all(
-        restoredOrders.map(async (order) => {
-          const originalPrice = order.totalPrice;
-          const discountAmount =
-            (originalPrice * promotion.discountPercentage) / 100;
-          const newTotalPrice = originalPrice - discountAmount;
-
-          // Gọi hàm cập nhật giá trong database
-          await updateOrderPriceByOrderId(order.orderId, newTotalPrice);
-
-          // Trả về order đã cập nhật
-          return {
-            ...order,
-            originalPrice: originalPrice, // Lưu lại giá gốc
-            totalPrice: newTotalPrice, // Cập nhật giá mới
-            discountAmount: discountAmount, // Cập nhật số tiền giảm giá
-          };
-        })
-      );
-
-      setOrders(updatedOrders);
-      setAppliedPromotion(promotion); // Lưu thông tin promotion đang áp dụng
-      toast.success(
-        `Applied ${promotion.discountPercentage}% discount successfully!`
-      );
-      setPromotionCode(""); // Xóa mã promotion sau khi áp dụng thành công
-    } catch (error) {
-      toast.error("Failed to apply promotion code");
-      console.error("Error applying promotion:", error);
-    }
-  };
-
-  // Hàm remove promotion
-  const handleRemovePromotion = async () => {
-    try {
-      // Khôi phục giá gốc cho tất cả orders
-      const restoredOrders = await Promise.all(
-        orders.map(async (order) => {
-          // Cập nhật lại giá gốc trong database
-          await updateOrderPriceByOrderId(order.orderId, order.originalPrice);
-
-          // Trả về order với giá gốc
-          return {
-            ...order,
-            totalPrice: order.originalPrice,
-            originalPrice: null,
-            discountAmount: 0,
-          };
-        })
-      );
-
-      setOrders(restoredOrders);
-      setAppliedPromotion(null); // Xóa promotion đang áp dụng
-      toast.success("Removed promotion code successfully!");
-    } catch (error) {
-      toast.error("Failed to remove promotion code");
-      console.error("Error removing promotion:", error);
-    }
-  };
-
-  //Checkout modal
-  const checkoutModal = isCheckoutModalOpen && (
-    <div className="fixed inset-0 bg-pink-100 bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-[500px] max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl text-center text-pink-600 font-semibold mb-4">
-          Checkout Information
-        </h2>
-        <form onSubmit={handleEditCheckout} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Full Name
-            </label>
-            <input
-              type="text"
-              name="userName"
-              value={formData.userName}
-              readOnly
-              disabled
-              className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 cursor-not-allowed"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Phone Number
-            </label>
-            <input
-              type="text"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Address
-            </label>
-            <input
-              type="text"
-              name="address"
-              value={formData.address}
-              onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-pink-500"
-            />
-          </div>
-
-          <div className="border-t border-gray-200 pt-4 mt-4">
-            <div className="flex justify-between mb-2">
-              <span className="text-gray-600">Subtotal</span>
-              <span className="font-semibold">
-                {orders
-                  .reduce(
-                    (total, order) =>
-                      total + (order.originalPrice || order.totalPrice),
-                    0
-                  )
-                  .toLocaleString()}
-                VND
-              </span>
-            </div>
-            <div className="flex justify-between text-lg font-semibold">
-              <span>Total</span>
-              <span className="text-pink-600">
-                {orders
-                  .reduce((total, order) => total + order.totalPrice, 0)
-                  .toLocaleString()}
-                VND
-              </span>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Payment Method
-            </label>
-            <div className="space-y-2">
-              <div className="flex items-center">
-                <input
-                  type="radio"
-                  id="cod"
-                  name="paymentMethod"
-                  value="cod"
-                  checked={paymentMethod === "cod"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="mr-2"
-                />
-                <label htmlFor="cod" className="text-pink-600">
-                  Cash on Delivery (COD)
-                </label>
-              </div>
-              <div className="flex items-center">
-                <input
-                  type="radio"
-                  id="online"
-                  name="paymentMethod"
-                  value="online"
-                  checked={paymentMethod === "online"}
-                  onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="mr-2"
-                />
-                <label htmlFor="online" className="text-pink-600">
-                  Online Payment
-                </label>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-3 mt-6">
-            <button
-              type="button"
-              onClick={() => setIsCheckoutModalOpen(false)}
-              className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={!paymentMethod}
-              className={`px-4 py-2 text-white rounded-md ${
-                paymentMethod
-                  ? "bg-pink-500 hover:bg-pink-600"
-                  : "bg-gray-400 cursor-not-allowed"
-              }`}
-            >
-              Confirm Checkout
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-
-  //Giao diện cart
   return (
     <div className="min-h-screen bg-gray-50 pt-20">
       <div className="container mx-auto px-4 py-8">
@@ -614,130 +269,27 @@ function CartPage() {
               </div>
             </div>
 
-            {/* Order Summary */}
+            {/* Order Summary - simplified version */}
             <div className="lg:w-1/3">
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h2 className="text-lg text-center font-semibold mb-4">
                   Order Summary
                 </h2>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Promotion Code
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={promotionCode}
-                      onChange={(e) => setPromotionCode(e.target.value)}
-                      placeholder="Enter your coupon code"
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-200"
-                    />
-                    <button
-                      type="button"
-                      onClick={handlePromotionCode}
-                      className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600"
-                    >
-                      OK
-                    </button>
-                  </div>
-                </div>
-
                 <div className="border-t border-gray-200 mt-4 pt-4">
-                  {appliedPromotion && (
-                    <div className="mb-4 p-3 bg-green-50 rounded-lg">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <div className="text-green-700 font-medium mb-1">
-                            Applied Promotion: {appliedPromotion.code}
-                          </div>
-                          <div className="text-sm text-green-600">
-                            {appliedPromotion.description}
-                          </div>
-                        </div>
-                        <button
-                          onClick={handleRemovePromotion}
-                          className="text-red-500 hover:text-red-700 text-sm"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Subtotal</span>
-                      <span className="font-semibold">
-                        {orders
-                          .reduce(
-                            (total, order) =>
-                              total + (order.originalPrice || order.totalPrice),
-                            0
-                          )
-                          .toLocaleString()}{" "}
-                        VND
-                      </span>
-                    </div>
-
-                    {appliedPromotion && (
-                      <div className="flex justify-between text-green-600">
-                        <span>
-                          Discount ({appliedPromotion.discountPercentage}%)
-                        </span>
-                        <span>
-                          -
-                          {orders
-                            .reduce(
-                              (total, order) =>
-                                total + (order.discountAmount || 0),
-                              0
-                            )
-                            .toLocaleString()}{" "}
-                          VND
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="flex justify-between text-lg font-semibold pt-2 border-t border-gray-200">
-                      <span>Total</span>
-                      <div className="text-right">
-                        {appliedPromotion && (
-                          <span className="text-sm text-gray-500 line-through block">
-                            {orders
-                              .reduce(
-                                (total, order) =>
-                                  total +
-                                  (order.originalPrice || order.totalPrice),
-                                0
-                              )
-                              .toLocaleString()}{" "}
-                            VND
-                          </span>
-                        )}
-                        <span className="text-pink-600">
-                          {orders
-                            .reduce(
-                              (total, order) => total + order.totalPrice,
-                              0
-                            )
-                            .toLocaleString()}{" "}
-                          VND
-                        </span>
-                      </div>
-                    </div>
+                  <div className="flex justify-between text-lg font-semibold">
+                    <span>Total</span>
+                    <span className="text-pink-600">
+                      {orders
+                        .reduce((total, order) => total + order.totalPrice, 0)
+                        .toLocaleString()}{" "}
+                      VND
+                    </span>
                   </div>
                 </div>
 
                 <button
-                  onClick={() => {
-                    setFormData({
-                      userName: userInfo?.userName || "",
-                      phoneNumber: userInfo?.phoneNumber || "",
-                      address: userInfo?.address || "",
-                    });
-                    setIsCheckoutModalOpen(true);
-                  }}
+                  onClick={() => navigate("/checkout")}
                   className="w-full mt-6 bg-pink-500 text-white py-3 rounded-full hover:bg-pink-600 transition duration-300"
                 >
                   PROCEED TO CHECKOUT
@@ -747,7 +299,6 @@ function CartPage() {
           </div>
         )}
       </div>
-      {checkoutModal}
     </div>
   );
 }
