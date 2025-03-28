@@ -19,4 +19,7 @@ public class PasswordUpdateRequest {
     public void setNewPassword(String newPassword) {
         this.newPassword = newPassword;
     }
+
+    // Getter and Setter
+
 }
