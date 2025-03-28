@@ -39,7 +39,7 @@ public class SkinCareRoutine {
 
 
 
-
+    // Getter and Setter
     public Long getRoutineId() {
         return routineId;
     }

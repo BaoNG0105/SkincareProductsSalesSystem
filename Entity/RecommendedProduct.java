@@ -30,6 +30,7 @@ public class RecommendedProduct {
 
     private boolean isDeleted = false;
 
+    // Getter and Setter
     public Long getRecommendationId() {
         return recommendationId;
     }

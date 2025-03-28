@@ -45,6 +45,7 @@ public class Promotion {
 
     private boolean available = true;
 
+    // Getter and Setter
     public Long getPromotionId() {
         return promotionId;
     }
