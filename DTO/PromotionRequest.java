@@ -30,6 +30,7 @@ public class PromotionRequest {
     @DecimalMin(value = "0.00", message = "Minimum order value must be at least 0")
     private BigDecimal minimumOrderValue;
 
+    // Getter and Setter
     public String getCode() {
         return code;
     }

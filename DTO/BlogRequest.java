@@ -20,7 +20,7 @@ public class BlogRequest {
 
     private String category;
 
-
+    // Getter and Setter
     public String getTitle() {
         return title;
     }

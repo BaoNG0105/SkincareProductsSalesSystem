@@ -21,7 +21,7 @@ public class ProductRequest {
     @NotNull(message = "Image cannot be null")
     private String image;
 
-
+    // Getter and Setter
     public String getProductName() {
         return productName;
     }
