@@ -49,6 +49,7 @@ public class Order {
     @Column(name = "is_deleted", nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
     private boolean isDeleted = false;
 
+    // Getter and Setter
     public Long getOrderId() {
         return orderId;
     }

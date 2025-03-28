@@ -74,6 +74,7 @@ public class Product {
     @JsonIgnore
     List<OrderItem> orderItems = new ArrayList<>();
 
+    // Getter and Setter
     public long getProductId() {
         return productId;
     }
