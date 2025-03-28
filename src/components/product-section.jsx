@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import api from "../config/axios";
+import { getProduct } from "../services/api.product";
 import PropTypes from "prop-types";
 
 const ProductSection = ({ category }) => {
@@ -12,8 +12,8 @@ const ProductSection = ({ category }) => {
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const response = await api.get("products");
-        const filteredProducts = response.data.filter(
+        const response = await getProduct();
+        const filteredProducts = response.filter(
           (product) => product.category.toLowerCase() === category.toLowerCase()
         );
         setProducts(filteredProducts);
