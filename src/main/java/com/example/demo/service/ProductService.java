@@ -62,7 +62,7 @@ public class ProductService {
     public Product updateStockQuantity(long id,int quantity){
         Product product = productRepository.findByProductIdAndStatusTrue(id)
                 .orElseThrow(() -> new RuntimeException("Product not found with ID: " + id));
-        if (product.getStockQuantity() - quantity > 0){
+        if (product.getStockQuantity() - quantity >= 0){
             product.setStockQuantity(product.getStockQuantity() - quantity);
             product.setUpdateAt(LocalDateTime.now());
         }

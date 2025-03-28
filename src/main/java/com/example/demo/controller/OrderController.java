@@ -1,15 +1,19 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.OrderRequest;
+import com.example.demo.dto.response.ProductSalesResponse;
 import com.example.demo.entity.Order;
+import com.example.demo.entity.Product;
 import com.example.demo.service.OrderService;
 import com.example.demo.utils.OrderStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = "http://localhost:5173")
 @RestController
@@ -25,6 +29,18 @@ public class OrderController {
         return ResponseEntity.ok(order);
     }
 
+
+
+
+    @GetMapping("/create-url")
+    public ResponseEntity<String> createURLPayment(@RequestParam Long orderId) {
+        try {
+            String paymentUrl = orderService.createURLPayment(orderId);
+            return ResponseEntity.ok(paymentUrl);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
+        }
+    }
 
     @GetMapping
 //    @PreAuthorize("hasRole('ROLE_MANAGER') or hasRole('ROLE_USER')")
@@ -69,6 +85,11 @@ public class OrderController {
         }
     }
 
+    @GetMapping("/api/orders/product-sales")
+    public List<ProductSalesResponse> getProductSalesSummary() {
+        return orderService.getProductSalesSummary();
+    }
+
     @PutMapping("/{orderId}/status")
     public ResponseEntity<Order> updateOrderStatus(@PathVariable Long orderId, @RequestParam String status) {
         try {
@@ -81,7 +102,7 @@ public class OrderController {
     }
 
     @PutMapping("{orderId}/price")
-    public ResponseEntity<Order> updatePriceOrder(@PathVariable Long orderId, @RequestParam BigDecimal price){
+    public ResponseEntity<Order> updatePriceOrder(@PathVariable Long orderId, @RequestParam BigDecimal price) {
         return ResponseEntity.ok(orderService.updatePriceOrder(orderId, price));
     }
 

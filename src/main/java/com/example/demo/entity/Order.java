@@ -1,6 +1,9 @@
 package com.example.demo.entity;
 
 import com.example.demo.utils.OrderStatus;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIgnoreType;
 import jakarta.persistence.*;
 import lombok.*;
 import java.math.BigDecimal;
@@ -22,6 +25,7 @@ public class Order {
 
     @ManyToOne
     @JoinColumn(name = "customer_id", nullable = false)
+    @JsonIgnoreProperties({"email", "passwordHash", "role", "createdAt", "status", "gender", "dateOfBirth", "username", "accountNonLocked", "deleted", "enabled", "money", "authorities", "password"})
     private User customer;
 
     @Column(name = "total_price", nullable = false, precision = 18, scale = 2)

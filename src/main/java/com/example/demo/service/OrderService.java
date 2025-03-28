@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.OrderRequest;
+import com.example.demo.dto.response.ProductSalesResponse;
 import com.example.demo.entity.*;
 import com.example.demo.repository.OrderRepository;
 import com.example.demo.repository.UserRepository;
@@ -18,6 +19,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
@@ -61,6 +63,23 @@ public class OrderService {
         return orderRepository.findByOrderStatusAndIsDeletedFalse(orderStatus);
     }
 
+    public List<ProductSalesResponse> getProductSalesSummary() {
+        Map<Long, Integer> productSales = new HashMap<>();
+
+        List<Order> orders = getOrdersByStatus(OrderStatus.DELIVERED);
+        for (Order order : orders) {
+            for (OrderItem item : order.getOrderItems()) {
+                long productId = item.getProduct().getProductId();
+                productSales.put(productId, productSales.getOrDefault(productId, 0) + item.getQuantity());
+            }
+        }
+
+        return productSales.entrySet().stream()
+                .map(entry -> new ProductSalesResponse(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+    }
+
+
 
 //    public List<Order> getOrdersByUserIdAndCancellationPolicyId(Long userId, Long cancellationPolicyId) {
 //
@@ -77,11 +96,11 @@ public class OrderService {
     //        User customer = userRepository.findById(orderRequest.getCustomerId())
     //                .orElseThrow(() -> new RuntimeException("Customer not found"));
     //
-    ////        CancellationPolicy policy = null;
-    ////        if (orderRequest.getCancellationPolicyId() != null) {
-    ////            policy = cancellationPolicyRepository.findById(orderRequest.getCancellationPolicyId())
-    ////                    .orElseThrow(() -> new RuntimeException("Cancellation Policy not found"));
-    ////        }
+    //        CancellationPolicy policy = null;
+    //        if (orderRequest.getCancellationPolicyId() != null) {
+    //            policy = cancellationPolicyRepository.findById(orderRequest.getCancellationPolicyId())
+    //                    .orElseThrow(() -> new RuntimeException("Cancellation Policy not found"));
+    //        }
     //
     //        Order order = Order.builder()
     //                .customer(customer)
@@ -152,6 +171,12 @@ public class OrderService {
         return orderRepository.save(order);
     }
 
+    public String createURLPayment(Long orderId) throws Exception{
+         Order order = orderRepository.findByOrderIdAndIsDeletedFalse(orderId)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+        return createURLPayment(order);
+    }
+
 
 
     public String createURLPayment(Order order) throws Exception{
@@ -164,8 +189,8 @@ public class OrderService {
         String orderId = UUID.randomUUID().toString().substring(0, 6);
 
 
-        String TMN_CODE = "BBBUL2B6"; // Lưu ý
-        String SECRET_KEY = "KSHFXBNJ7KE0OPKZEM9COMEYQRUXCI0X"; // Lưu ý
+        String TMN_CODE = "Y0QTPDND";
+        String SECRET_KEY = "73QVR947ZXMDPFFY1AX78OOZBGAQOD3N";
         String VNP_URL = "https://sandbox.vnpayment.vn/paymentv2/vpcpay.html";
 
         String returnURL = "http://localhost:8080?orderId=" + order.getOrderId(); // Chú ý url quay lại khi đã thanh toán thành công đơn hàng
