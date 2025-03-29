@@ -62,6 +62,15 @@ const DashboardLayout = () => {
                 </a>
               </li>
             )}
+
+            {isStaff && (
+              <li className="p-4 hover:bg-pink-200">
+                <a href="/dashboard/rating" className="flex items-center">
+                  <span className="material-icons">star</span>
+                  <span className="ml-2">Rating - Feedback</span>
+                </a>
+              </li>
+            )}
             
             {isManager && (
               <li className="p-4 hover:bg-pink-200">

@@ -13,4 +13,15 @@ export const createRating = async (ratingData) => {
     }
 }
 
+//API get all rating
+export const getAllRatings = async () => {
+    try {
+        const response = await api.get("/ratings-feedback");
+        return response.data;
+    } catch (error) {
+        console.error("Error getting all rating:", error);
+        toast.error("Failed to get all rating");
+        throw error;
+    }
+}
 

@@ -28,6 +28,7 @@ import SerumPage from "./pages/product/serum/index.jsx";
 import SunScreenPage from "./pages/product/sunScreen/index.jsx";
 import CategoryPage from "./pages/category/index.jsx";
 import ProductDetailPage from "./pages/product-detail/index.jsx";
+import ProductComparePage from "./pages/product-compare/index.jsx";
 import ProductSearchPage from "./pages/product-search/index.jsx";
 import PromotionPage from "./pages/promotion/index.jsx";
 import FAQsPage from "./pages/FAQs/index.jsx";
@@ -36,12 +37,12 @@ import ReturnPolicyPage from "./pages/policies/return/index.jsx";
 import ShippingPolicyPage from "./pages/policies/shipping/index.jsx";
 import TermsConditionsPage from "./pages/policies/terms-conditions/index.jsx";
 import DashboardLayout from "./layout/DashboardLayout.jsx";
+import OverviewPage from "./pages/dashboard/overview/index.jsx";
 import ProductPage from "./pages/dashboard/product/index.jsx";
+import RatingFeedbackPage from "./pages/dashboard/rating-feedback/index.jsx";
 import StaffPage from "./pages/dashboard/staff/index.jsx";
 import OrderPage from "./pages/dashboard/order/index.jsx";
 import CustomerPage from "./pages/dashboard/customer/index.jsx";
-import ProductComparePage from "./pages/product-compare/index.jsx";
-import OverviewPage from "./pages/dashboard/overview/index.jsx";
 
 //Single Page Application
 //Client side rendering
@@ -385,6 +386,10 @@ const router = createBrowserRouter([
       {
         path: "product",
         element: <ProductPage />,
+      },
+      {
+        path: "rating",
+        element: <RatingFeedbackPage />,
       },
       {
         path: "staff",
