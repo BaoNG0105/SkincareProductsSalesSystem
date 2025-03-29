@@ -13,7 +13,6 @@ public class OrderRequest {
 
     // Getter and Setter
 
-
     public Long getUserId() {
         return userId;
     }

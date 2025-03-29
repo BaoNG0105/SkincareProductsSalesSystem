@@ -7,10 +7,6 @@ import java.time.LocalDate;
 
 public class UserRequest {
 
-
-
-
-
     @Column(name = "password_hash", nullable = false, columnDefinition = "TEXT")
     private String passwordHash;  // TEXT NOT NULL
 

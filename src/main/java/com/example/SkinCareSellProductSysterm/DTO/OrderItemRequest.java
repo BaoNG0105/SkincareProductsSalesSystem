@@ -21,5 +21,43 @@ public class OrderItemRequest {
 
     // Getter and Setter
 
+    public @NotNull Long getOrderId() {
+        return orderId;
+    }
 
+    public void setOrderId(@NotNull Long orderId) {
+        this.orderId = orderId;
+    }
+
+    public @NotNull Long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(@NotNull Long productId) {
+        this.productId = productId;
+    }
+
+    public @NotNull int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(@NotNull int quantity) {
+        this.quantity = quantity;
+    }
+
+    public @NotNull BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(@NotNull BigDecimal unitPrice) {
+        this.unitPrice = unitPrice;
+    }
+
+    public @NotNull BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public void setDiscountAmount(@NotNull BigDecimal discountAmount) {
+        this.discountAmount = discountAmount;
+    }
 }

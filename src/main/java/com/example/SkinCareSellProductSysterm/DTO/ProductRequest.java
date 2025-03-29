@@ -22,6 +22,8 @@ public class ProductRequest {
     private String image;
 
 
+    // Getter and Setter
+
     public String getProductName() {
         return productName;
     }

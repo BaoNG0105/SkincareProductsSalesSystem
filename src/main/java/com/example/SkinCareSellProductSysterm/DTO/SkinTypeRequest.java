@@ -11,7 +11,7 @@ public class SkinTypeRequest {
     @Column(name = "skin_type", nullable = false, unique = true)
     private String skinType;
 
-
+    // Getter and Setter
 
     public String getSkinType() {
         return skinType;

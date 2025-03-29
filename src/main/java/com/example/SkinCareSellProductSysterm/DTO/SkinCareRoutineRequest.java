@@ -21,7 +21,7 @@ public class SkinCareRoutineRequest {
     @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description;
 
-
+    // Getter and Setter
 
     public Long getProductId() {
         return productId;
