@@ -17,6 +17,8 @@ import {
   FaMapMarkerAlt,
   FaDollarSign,
 } from "react-icons/fa";
+import { Modal, Rate, Input, Radio, Space } from 'antd';
+import { createRating } from "../../services/api.rating";
 
 
 function OrderStatusPage() {
@@ -30,13 +32,17 @@ function OrderStatusPage() {
   const [allOrders, setAllOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
-  const [selectedReason, setSelectedReason] = useState("");
   const [currentOrderId, setCurrentOrderId] = useState(null);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [feedbacks, setFeedbacks] = useState({});
+  const { TextArea } = Input;
+  const [cancelReason, setCancelReason] = useState('');
 
   const cancelReasons = [
-    "Change the intention to buy",
-    "Find a better price",
-    "Mistake in product/quantity",
+    "Changed my mind about the products",
+    "Found better price elsewhere",
+    "Ordered by mistake"
   ];
 
   useEffect(() => {
@@ -88,7 +94,7 @@ function OrderStatusPage() {
     }
   };
 
-  // Confirm cancel order
+  //Hàm cancel order
   const handleConfirmCancel = async () => {
     try {
       // 1. Gọi API để update status thành CANCELLED
@@ -120,50 +126,129 @@ function OrderStatusPage() {
     }
   };
 
-  // Delete order modal component
-  const cancelModal = isCancelModalOpen && (
-    <div className="fixed inset-0 bg-pink-100 bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-[400px]">
-        <h2 className="text-xl text-pink-600 font-bold text-center mb-4">
-          Reason for canceling order
-        </h2>
-        <div className="space-y-3">
-          {cancelReasons.map((reason, index) => (
-            <div key={index} className="flex items-center">
-              <input
-                type="radio"
-                id={`reason-${index}`}
-                name="cancelReason"
-                value={reason}
-                checked={selectedReason === reason}
-                onChange={(e) => setSelectedReason(e.target.value)}
-                className="mr-2"
-              />
-              <label htmlFor={`reason-${index}`}>{reason}</label>
-            </div>
+  const handleOpenFeedbackModal = (order) => {
+    setSelectedOrder(order);
+    // Initialize feedback state for each product
+    const initialFeedbacks = {};
+    order.orderItems.forEach(item => {
+      initialFeedbacks[item.product.productId] = {
+        rating: 0,
+        comment: ''
+      };
+    });
+    setFeedbacks(initialFeedbacks);
+    setIsFeedbackModalOpen(true);
+  };
+
+  //Hàm submit feedback
+  const handleSubmitFeedback = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const decoded = jwtDecode(token);
+      const userId = decoded.id;
+
+      // Submit feedback for each product
+      const feedbackPromises = Object.entries(feedbacks).map(([productId, feedback]) => {
+        if (feedback.rating > 0) { // Only submit if rating was given
+          return createRating({
+            userId,
+            productId,
+            rating: feedback.rating,
+            comment: feedback.comment
+          });
+        }
+        return Promise.resolve();
+      });
+
+      await Promise.all(feedbackPromises);
+      toast.success("Thank you for your feedback!");
+      setIsFeedbackModalOpen(false);
+    } catch (error) {
+      console.error("Error submitting feedback:", error);
+      toast.error("Failed to submit feedback");
+    }
+  };
+
+  // Replace the existing cancelModal with this new one
+  const cancelModal = (
+    <Modal
+      title="Cancel Order"
+      open={isCancelModalOpen}
+      onOk={handleConfirmCancel}
+      onCancel={() => setIsCancelModalOpen(false)}
+      okText="Confirm"
+      cancelText="Close"
+      okButtonProps={{ 
+        style: { backgroundColor: '#dc2626', borderColor: '#dc2626' },
+        disabled: !cancelReason 
+      }}
+    >
+      <p className="text-gray-600 mb-4">Please select a reason for cancellation:</p>
+      <Radio.Group 
+        onChange={(e) => setCancelReason(e.target.value)}
+        value={cancelReason}
+      >
+        <Space direction="vertical">
+          {cancelReasons.map((reason) => (
+            <Radio key={reason} value={reason}>
+              {reason}
+            </Radio>
           ))}
+        </Space>
+      </Radio.Group>
+    </Modal>
+  );
+
+  // Add this feedback modal component
+  const feedbackModal = (
+    <Modal
+      title="Rate Your Experience"
+      open={isFeedbackModalOpen}
+      onOk={handleSubmitFeedback}
+      onCancel={() => setIsFeedbackModalOpen(false)}
+      width={600}
+    >
+      {selectedOrder?.orderItems.map((item) => (
+        <div key={item.orderItemId} className="mb-6 pb-4 border-b">
+          <div className="flex items-center gap-4 mb-3">
+            <img
+              src={item.product.image}
+              alt={item.product.productName}
+              className="w-16 h-16 object-cover rounded"
+            />
+            <div>
+              <h4 className="font-medium">{item.product.productName}</h4>
+              <Rate
+                value={feedbacks[item.product.productId]?.rating || 0}
+                onChange={(value) => {
+                  setFeedbacks(prev => ({
+                    ...prev,
+                    [item.product.productId]: {
+                      ...prev[item.product.productId],
+                      rating: value
+                    }
+                  }));
+                }}
+              />
+            </div>
+          </div>
+          <TextArea
+            placeholder="Share your thoughts about this product..."
+            value={feedbacks[item.product.productId]?.comment || ''}
+            onChange={(e) => {
+              setFeedbacks(prev => ({
+                ...prev,
+                [item.product.productId]: {
+                  ...prev[item.product.productId],
+                  comment: e.target.value
+                }
+              }));
+            }}
+            rows={3}
+          />
         </div>
-        <div className="flex justify-end space-x-3 mt-6">
-          <button
-            onClick={() => setIsCancelModalOpen(false)}
-            className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md"
-          >
-            Close
-          </button>
-          <button
-            onClick={handleConfirmCancel}
-            disabled={!selectedReason}
-            className={`px-4 py-2 text-white rounded-md ${
-              selectedReason
-                ? "bg-red-500 hover:bg-red-600"
-                : "bg-gray-400 cursor-not-allowed"
-            }`}
-          >
-            Confirm Cancel
-          </button>
-        </div>
-      </div>
-    </div>
+      ))}
+    </Modal>
   );
 
   if (loading) {
@@ -332,7 +417,7 @@ function OrderStatusPage() {
                             handleConfirmReceived(order.orderId);
                             break;
                           case "DELIVERED":
-                            navigate(`/order-feedback/${order.orderId}`);
+                            handleOpenFeedbackModal(order);
                             break;
                           default:
                             break;
@@ -367,6 +452,7 @@ function OrderStatusPage() {
         </div>
       </div>
       {cancelModal}
+      {feedbackModal}
     </div>
   );
 }
