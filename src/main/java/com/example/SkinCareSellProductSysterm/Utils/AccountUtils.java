@@ -1,5 +1,7 @@
 package com.example.SkinCareSellProductSysterm.Utils;
 
+import com.example.SkinCareSellProductSysterm.Entity.User;
+import com.example.SkinCareSellProductSysterm.Repository.UserRepository;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
