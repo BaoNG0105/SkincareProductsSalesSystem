@@ -44,6 +44,7 @@ public class RatingFeedback {
     @Column(name = "is_deleted", nullable = false)
     private boolean isDeleted = false;
 
+    // Getter and Setter
     public Long getId() {
         return id;
     }

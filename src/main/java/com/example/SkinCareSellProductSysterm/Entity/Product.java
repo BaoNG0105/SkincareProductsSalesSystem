@@ -21,7 +21,6 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long productId;
 
-
     @NotBlank(message = "Product name cannot be blank")
     private String productName;
 
@@ -62,10 +61,12 @@ public class Product {
         this.updateAt = LocalDateTime.now();
     }
 
-
+    // Nối với bảng Rating Feelback
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<RatingFeedback> ratingFeedbacks;
+
+    // Nối với bảng Recomment Product
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RecommendedProduct> recommendedProducts;
 
@@ -74,6 +75,7 @@ public class Product {
     @JsonIgnore
     List<OrderItem> orderItems = new ArrayList<>();
 
+    // Getter and Setter
     public long getProductId() {
         return productId;
     }

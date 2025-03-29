@@ -38,7 +38,7 @@ public class SkinCareRoutine {
     private boolean isDeleted = false;
 
 
-
+    // Getter and Setter
 
     public Long getRoutineId() {
         return routineId;

@@ -25,6 +25,7 @@ public class Promotion {
     @Column(name = "description")
     private String description;
 
+    // Vadilation
     @NotNull(message = "Discount percentage cannot be null")
     @DecimalMin(value = "0.00", message = "Discount percentage must be at least 0")
     @DecimalMax(value = "100.00", message = "Discount percentage must be at most 100")
@@ -45,6 +46,7 @@ public class Promotion {
 
     private boolean available = true;
 
+    // Getter and Setter
     public Long getPromotionId() {
         return promotionId;
     }

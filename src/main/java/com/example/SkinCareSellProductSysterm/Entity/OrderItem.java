@@ -21,11 +21,13 @@ public class OrderItem {
     @Column(name = "order_item_id")
     private Long orderItemId;
 
+    // Nối với bảng Order
     @ManyToOne
     @JoinColumn(name = "order_id", nullable = false)
     @JsonIgnoreProperties({"customer", "orderItems"})
     private Order order;
 
+    // Nối với bảng Product
     @ManyToOne
     @JoinColumn(name = "product_id", nullable = false)
     @JsonIgnore

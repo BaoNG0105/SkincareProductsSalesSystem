@@ -43,6 +43,7 @@ public class Blog {
 
     private boolean isDeleted = false;
 
+    // Getter and Setter
 
     public Long getId() {
         return id;
