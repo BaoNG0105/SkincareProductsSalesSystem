@@ -62,7 +62,7 @@ public class SkinCareRoutineService {
 
     public SkinCareRoutine getSkinCareRoutineById(long skinCareRoutineId) {
         return skinCareRoutineRepository.findByRoutineIdAndIsDeletedFalse(skinCareRoutineId)
-                .orElseThrow(() -> new RuntimeException("SkinCareRoutine not found"));
+                .orElseThrow(() -> new RuntimeException("SkinCareRoutineController not found"));
     }
 
 }
