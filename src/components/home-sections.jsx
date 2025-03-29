@@ -1,22 +1,25 @@
 import { useState, useEffect } from "react";
-import { Swiper, SwiperSlide } from "swiper/react"; // import Swiper
-import { Autoplay, Navigation } from "swiper/modules"; // import Modules
-import "swiper/css"; // import CSS
-import "swiper/css/navigation"; // import Navigation
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Autoplay, Navigation } from "swiper/modules";
+import "swiper/css";
+import "swiper/css/navigation";
 import { getProduct } from "../services/api.product";
-import PropTypes from "prop-types"; // Import PropTypes
+import PropTypes from "prop-types";
 
 const ProductSection = ({ category }) => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  //Hàm lấy danh sách sản phẩm theo category & sản phẩm còn hàng
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await getProduct();
         const filteredProducts = response.filter(
-          (product) => product.category.toLowerCase() === category.toLowerCase()
+          (product) => 
+            product.category.toLowerCase() === category.toLowerCase() &&
+            product.stockQuantity > 0
         );
         setProducts(filteredProducts);
       } catch (error) {

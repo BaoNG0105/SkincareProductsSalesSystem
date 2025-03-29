@@ -9,12 +9,15 @@ const ProductSection = ({ category }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const productsPerPage = 12;
 
+  //Hàm lấy danh sách sản phẩm theo category & sản phẩm còn hàng
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await getProduct();
         const filteredProducts = response.filter(
-          (product) => product.category.toLowerCase() === category.toLowerCase()
+          (product) => 
+            product.category.toLowerCase() === category.toLowerCase() &&
+            product.stockQuantity > 0
         );
         setProducts(filteredProducts);
       } catch (err) {
@@ -25,7 +28,6 @@ const ProductSection = ({ category }) => {
         setLoading(false);
       }
     };
-
     fetchProducts();
   }, [category]);
 
@@ -41,6 +43,7 @@ const ProductSection = ({ category }) => {
   );
   const totalPages = Math.ceil(products.length / productsPerPage);
 
+  //Hàm xử lý sự kiện khi người dùng chọn trang
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: "smooth" });

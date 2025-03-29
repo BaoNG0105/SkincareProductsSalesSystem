@@ -199,6 +199,7 @@ const ProductDetailPage = () => {
   return (
     <div className="bg-gray-100 min-h-screen p-6">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+      
         {/* Product Image */}
         <div className="bg-white rounded-lg shadow-md p-4">
           <div className="relative h-[450px] group">
@@ -220,24 +221,27 @@ const ProductDetailPage = () => {
 
             <hr className="border-gray-200" />
 
+            {/* Description */}
             <div>
               <h2 className="text-xl font-semibold mb-2">Description</h2>
               <p className="text-gray-600">{product.description}</p>
             </div>
 
+            {/* Status */}
             <div className="flex items-center gap-2">
               <span>Status:</span>
               <span
                 className={`px-2 py-1 rounded text-sm ${
-                  product.status
+                  product.stockQuantity > 0
                     ? "bg-green-100 text-green-800"
                     : "bg-red-100 text-red-800"
                 }`}
               >
-                {product.status ? "In Stock" : "Out of Stock"}
+                {product.stockQuantity > 0 ? "In Stock" : "Sold Out"}
               </span>
             </div>
 
+            {/* Available */}
             <div className="flex items-center gap-2">
               <span>Available:</span>
               <span className="px-2 py-1 rounded text-sm bg-blue-100 text-blue-800">
@@ -252,7 +256,7 @@ const ProductDetailPage = () => {
                 <button
                   onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
                   className="px-3 py-1 border-r hover:bg-gray-200"
-                  disabled={quantity <= 1}
+                  disabled={quantity <= 1 || product.stockQuantity === 0}
                 >
                   -
                 </button>
@@ -270,6 +274,7 @@ const ProductDetailPage = () => {
                     )
                   }
                   className="w-15 text-center focus:outline-none"
+                  disabled={product.stockQuantity === 0}
                 />
                 <button
                   onClick={() =>
@@ -278,7 +283,7 @@ const ProductDetailPage = () => {
                     )
                   }
                   className="px-3 py-1 border-l hover:bg-gray-200"
-                  disabled={quantity >= product.stockQuantity}
+                  disabled={quantity >= product.stockQuantity || product.stockQuantity === 0}
                 >
                   +
                 </button>
@@ -314,21 +319,21 @@ const ProductDetailPage = () => {
               {/* Add to Cart */}
               <button
                 onClick={handleAddToCart}
-                disabled={!product.status}
+                disabled={product.stockQuantity === 0}
                 className="w-full py-2.5 px-4 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-800 flex items-center justify-center gap-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <FaShoppingCart className="w-5 h-5" />
-                Add to Cart
+                {product.stockQuantity === 0 ? "Sold Out" : "Add to Cart"}
               </button>
 
               {/* Buy Now */}
               <button
                 onClick={handleBuyNow}
-                disabled={!product.status}
+                disabled={product.stockQuantity === 0}
                 className="w-full py-2.5 px-4 rounded-lg bg-pink-600 hover:bg-pink-700 text-white flex items-center justify-center gap-2 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <FaMoneyBillWave className="w-5 h-5" />
-                Buy Now
+                {product.stockQuantity === 0 ? "Sold Out" : "Buy Now"}
               </button>
             </div>
           </div>

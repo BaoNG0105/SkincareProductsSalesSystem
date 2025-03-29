@@ -4,7 +4,6 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(),tailwindcss(),],
-  base: process.env.VITE_BASE_PATH || "/SkincareProductsSalesSystem", //dùng cho vercel
-  // base: "/", //dùng cho local host
+  plugins: [react(), tailwindcss()],
+  base: process.env.VITE_BASE_PATH || "/",
 });
