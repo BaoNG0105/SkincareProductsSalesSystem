@@ -31,7 +31,7 @@ const DashboardLayout = () => {
 
   return (
     <div className="flex h-screen">
-      <aside className="w-64 bg-pink-300 text-white">
+      <aside className="w-64 bg-pink-300 text-white h-screen fixed overflow-y-auto">
         <div className="p-4 text-center text-xl font-extrabold">MENU</div>
         <nav>
           <ul>
@@ -103,12 +103,13 @@ const DashboardLayout = () => {
         </nav>
       </aside>
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col ml-64">
         <header className="bg-white shadow p-4 flex justify-between items-center">
-          <h1 className="text-2xl text-center text-pink-600 font-extrabold">Dashboard</h1>
+          <div className="w-1/3"></div> {/* Spacer */}
+          <h1 className="text-2xl text-pink-600 font-extrabold w-1/3 text-center">Dashboard</h1>
           
           {/* User Menu */}
-          <div className="relative">
+          <div className="relative w-1/3 flex justify-end">
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="p-2 rounded-full hover:bg-pink-100 transition-all duration-300"
