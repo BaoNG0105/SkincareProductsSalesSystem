@@ -37,7 +37,7 @@ import ReturnPolicyPage from "./pages/policies/return/index.jsx";
 import ShippingPolicyPage from "./pages/policies/shipping/index.jsx";
 import TermsConditionsPage from "./pages/policies/terms-conditions/index.jsx";
 import DashboardLayout from "./layout/DashboardLayout.jsx";
-import OverviewPage from "./pages/dashboard/overview/index.jsx";
+import OverviewDashboardPage from "./pages/dashboard/overview/index.jsx";
 import ProductDashboardPage from "./pages/dashboard/product/index.jsx";
 import PromotionDashboardPage from "./pages/dashboard/promotion/index.jsx";
 import RatingFeedbackDashboardPage from "./pages/dashboard/rating-feedback/index.jsx";
@@ -380,7 +380,7 @@ const router = createBrowserRouter([
         path: "overview",
         element: (
           <ManagerRoute>
-            <OverviewPage />
+            <OverviewDashboardPage />
           </ManagerRoute>
         ),
       },

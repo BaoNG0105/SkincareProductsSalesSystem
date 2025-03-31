@@ -13,46 +13,15 @@ import {
 import { getProductSales } from "../../../services/api.sales";
 import { getProductById } from "../../../services/api.product";
 import { getUsers } from "../../../services/api.user";
+import { getOrderByStatus } from "../../../services/api.order";
+import { getAllRatings } from "../../../services/api.rating";
 
-function OverviewPage() {
+function OverviewDashboardPage() {
   const [salesData, setSalesData] = useState([]);
   const [loading, setLoading] = useState(false);
   const [userStats, setUserStats] = useState([]);
-
-  // Fetch data cho bảng sản phẩm bán ra
-  useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      try {
-        const productSales = await getProductSales();
-
-        // Fetch product details cho từng sale bằng Promise.all
-        const salesWithDetails = await Promise.all(
-          productSales.map(async (sale) => {
-            const productDetail = await getProductById(sale.productId);
-            return {
-              key: sale.productId,
-              productId: sale.productId,
-              productName: productDetail
-                ? productDetail.productName
-                : `Product ${sale.productId}`,
-              quantitySold: sale.quantitySold,
-            };
-          })
-        );
-
-        // Sắp xếp theo số lượng bán giảm dần
-        salesWithDetails.sort((a, b) => b.quantitySold - a.quantitySold);
-        setSalesData(salesWithDetails);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, []);
+  const [orderStats, setOrderStats] = useState([]);
+  const [ratingStats, setRatingStats] = useState([]);
 
   // Fetch user cho bảng thống kê người dùng
   useEffect(() => {
@@ -80,6 +49,93 @@ function OverviewPage() {
 
     fetchUserStats();
   }, []);
+
+  // Fetch order cho bảng thống kê đơn hàng
+  useEffect(() => {
+    const fetchOrderStats = async () => {
+      try {
+        const statuses = ["PROCESSING", "SHIPPING", "DELIVERED", "CANCELLED"];
+        const orderData = await Promise.all(
+          statuses.map(async (status) => {
+            const orders = await getOrderByStatus(status);
+            return {
+              name: status.charAt(0) + status.slice(1).toLowerCase(),
+              value: orders.length,
+            };
+          })
+        );
+        setOrderStats(orderData);
+      } catch (error) {
+        console.error("Error fetching order stats:", error);
+      }
+    };
+
+    fetchOrderStats();
+  }, []);
+
+  // Fetch rating cho bảng thống kê đánh giá
+  useEffect(() => {
+    const fetchRatingStats = async () => {
+      try {
+        const ratings = await getAllRatings();
+        const ratingCounts = Array(5).fill(0); // Array for ratings 1-5
+
+        // Count ratings for each star level
+        ratings.forEach(rating => {
+          if (rating.rating >= 1 && rating.rating <= 5) {
+            ratingCounts[rating.rating - 1]++;
+          }
+        });
+
+        // Format data for the chart
+        const ratingData = ratingCounts.map((count, index) => ({
+          name: `${index + 1} Star`,
+          value: count
+        }));
+
+        setRatingStats(ratingData);
+      } catch (error) {
+        console.error("Error fetching rating stats:", error);
+      }
+    };
+
+    fetchRatingStats();
+  }, []);
+
+    // Fetch data cho bảng sản phẩm bán ra
+    useEffect(() => {
+      const fetchData = async () => {
+        setLoading(true);
+        try {
+          const productSales = await getProductSales();
+  
+          // Fetch product details cho từng sale bằng Promise.all
+          const salesWithDetails = await Promise.all(
+            productSales.map(async (sale) => {
+              const productDetail = await getProductById(sale.productId);
+              return {
+                key: sale.productId,
+                productId: sale.productId,
+                productName: productDetail
+                  ? productDetail.productName
+                  : `Product ${sale.productId}`,
+                quantitySold: sale.quantitySold,
+              };
+            })
+          );
+  
+          // Sắp xếp theo số lượng bán giảm dần
+          salesWithDetails.sort((a, b) => b.quantitySold - a.quantitySold);
+          setSalesData(salesWithDetails);
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchData();
+    }, []);
 
   //Tạo table cho Product Sales Statistics
   const columns = [
@@ -140,6 +196,83 @@ function OverviewPage() {
         </div>
       </div>
 
+      {/* Order Statistics Chart */}
+      <div className="mb-8">
+        <h2 className="text-2xl text-center font-bold mb-4">
+          Order Statistics
+        </h2>
+        <div className="flex justify-center">
+          <BarChart
+            width={600}
+            height={300}
+            data={orderStats}
+            margin={{
+              top: 5,
+              right: 30,
+              left: 20,
+              bottom: 5,
+            }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis domain={[0, 10]} />
+            <Tooltip />
+            <Legend />
+            <Bar
+              dataKey="value"
+              name="Number of Orders"
+              label={{ position: "top" }}
+            >
+              {orderStats.map((entry, index) => {
+                const colors = {
+                  Processing: "#FFB347", // Cam
+                  Shipping: "#87CEEB", // Xanh dương nhạt
+                  Delivered: "#90EE90", // Xanh lá
+                  Cancelled: "#FF6B6B", // Đỏ nhạt
+                };
+                return <Cell key={`cell-${index}`} fill={colors[entry.name]} />;
+              })}
+            </Bar>
+          </BarChart>
+        </div>
+      </div>
+
+      {/* Rating Statistics Chart */}
+      <div className="mb-8">
+        <h2 className="text-2xl text-center font-bold mb-4">Rating Statistics</h2>
+        <div className="flex justify-center">
+          <BarChart
+            width={600}
+            height={300}
+            data={ratingStats}
+            margin={{
+              top: 5,
+              right: 30,
+              left: 20,
+              bottom: 5,
+            }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="name" />
+            <YAxis domain={[0, 30]} />
+            <Tooltip />
+            <Legend />
+            <Bar dataKey="value" name="Number of Ratings" label={{ position: "top" }}>
+              {ratingStats.map((entry, index) => {
+                const colors = [
+                  "#FF6B6B",  // 1 star - Đỏ
+                  "#FFB347",  // 2 star - Cam
+                  "#FFDE5A",  // 3 star - Vàng
+                  "#98FB98",  // 4 star - Xanh lá nhạt
+                  "#32CD32"   // 5 star - Xanh lá đậm
+                ];
+                return <Cell key={`cell-${index}`} fill={colors[index]} />;
+              })}
+            </Bar>
+          </BarChart>
+        </div>
+      </div>
+
       {/* Product Sales Table */}
       <h2 className="text-2xl text-center font-bold mb-4">
         Product Sales Statistics
@@ -159,4 +292,4 @@ function OverviewPage() {
   );
 }
 
-export default OverviewPage;
+export default OverviewDashboardPage;
