@@ -41,7 +41,7 @@ import OverviewPage from "./pages/dashboard/overview/index.jsx";
 import ProductDashboardPage from "./pages/dashboard/product/index.jsx";
 import PromotionDashboardPage from "./pages/dashboard/promotion/index.jsx";
 import RatingFeedbackDashboardPage from "./pages/dashboard/rating-feedback/index.jsx";
-import StaffPage from "./pages/dashboard/staff/index.jsx";
+import StaffDashboardPage from "./pages/dashboard/staff/index.jsx";
 import OrderPage from "./pages/dashboard/order/index.jsx";
 import CustomerDashboardPage from "./pages/dashboard/customer/index.jsx";
 
@@ -404,7 +404,7 @@ const router = createBrowserRouter([
         path: "staff",
         element: (
           <ManagerRoute>
-            <StaffPage />
+            <StaffDashboardPage />
           </ManagerRoute>
         ),
       },
