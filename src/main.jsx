@@ -40,7 +40,7 @@ import DashboardLayout from "./layout/DashboardLayout.jsx";
 import OverviewPage from "./pages/dashboard/overview/index.jsx";
 import ProductDashboardPage from "./pages/dashboard/product/index.jsx";
 import PromotionDashboardPage from "./pages/dashboard/promotion/index.jsx";
-import RatingFeedbackPage from "./pages/dashboard/rating-feedback/index.jsx";
+import RatingFeedbackDashboardPage from "./pages/dashboard/rating-feedback/index.jsx";
 import StaffPage from "./pages/dashboard/staff/index.jsx";
 import OrderPage from "./pages/dashboard/order/index.jsx";
 import CustomerPage from "./pages/dashboard/customer/index.jsx";
@@ -394,7 +394,7 @@ const router = createBrowserRouter([
       },
       {
         path: "rating",
-        element: <RatingFeedbackPage />,
+        element: <RatingFeedbackDashboardPage />,
       },
       {
         path: "staff",
