@@ -1,6 +1,16 @@
 import api from "../config/axios";
 import { toast } from "react-toastify";
 
+// API get all orders
+export const getAllOrders = async () => {
+  try {
+    const response = await api.get("/order");
+    return response.data;
+  } catch (error) {
+    toast.error(error.response.data);
+  }
+};
+
 // API get orderId and status by userId
 export const getOrderIdAndStatusByUserId = async (customerId) => {
   try {

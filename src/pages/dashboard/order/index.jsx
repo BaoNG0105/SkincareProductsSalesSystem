@@ -9,7 +9,7 @@ import { HiOutlineShoppingBag } from "react-icons/hi";
 import { toast } from "react-toastify";
 import { Table, Button, Modal } from "antd";
 
-function OrderPage() {
+function OrderDashboardPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -168,4 +168,4 @@ function OrderPage() {
   );
 }
 
-export default OrderPage;
+export default OrderDashboardPage;

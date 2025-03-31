@@ -42,7 +42,7 @@ import ProductDashboardPage from "./pages/dashboard/product/index.jsx";
 import PromotionDashboardPage from "./pages/dashboard/promotion/index.jsx";
 import RatingFeedbackDashboardPage from "./pages/dashboard/rating-feedback/index.jsx";
 import StaffDashboardPage from "./pages/dashboard/staff/index.jsx";
-import OrderPage from "./pages/dashboard/order/index.jsx";
+import OrderDashboardPage from "./pages/dashboard/order/index.jsx";
 import CustomerDashboardPage from "./pages/dashboard/customer/index.jsx";
 
 //Single Page Application
@@ -386,7 +386,7 @@ const router = createBrowserRouter([
       },
       {
         path: "order",
-        element: <OrderPage />,
+        element: <OrderDashboardPage />,
       },
       {
         path: "product",
