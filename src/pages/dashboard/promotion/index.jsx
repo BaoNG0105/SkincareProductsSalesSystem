@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getPromotion, postPromotion, updatePromotion, deletePromotion } from '../../../services/api.promotion';
 import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
+import { HiOutlineTag } from 'react-icons/hi2';
 import { format } from 'date-fns';
 import { toast } from 'react-toastify';
 import { Modal, Form, Input, InputNumber, DatePicker, Switch, Button, Table } from 'antd';
@@ -175,7 +176,10 @@ const PromotionDashboardPage = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Promotion Management</h1>
+        <div className="flex items-center gap-3">
+          <HiOutlineTag className="text-3xl text-indigo-600" />
+          <h1 className="text-2xl font-bold">Promotion Management</h1>
+        </div>
         <Button
           onClick={() => handleOpenModal()}
           type="primary"
