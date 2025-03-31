@@ -7,7 +7,7 @@ import { deleteUserByUserId } from "../../../services/api.user";
 import { toast } from "react-toastify";
 import { Table, Modal, Button } from 'antd';
 
-function CustomerPage() {
+function CustomerDashboardPage() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -90,7 +90,16 @@ function CustomerPage() {
       title: 'Full Name',
       dataIndex: 'userName',
       key: 'userName',
-      render: (userName) => userName || 'Not updated'
+      render: (userName, record) => (
+        <div className="flex items-center">
+          <img
+            src={record.profileImage}
+            alt={userName}
+            className="w-10 h-10 rounded-full object-cover mr-3"
+          />
+          <span>{userName || 'Not updated'}</span>
+        </div>
+      )
     },
     {
       title: 'Email',
@@ -185,4 +194,4 @@ function CustomerPage() {
   );
 }
 
-export default CustomerPage;
+export default CustomerDashboardPage;

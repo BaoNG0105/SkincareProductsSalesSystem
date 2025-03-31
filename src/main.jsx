@@ -43,7 +43,7 @@ import PromotionDashboardPage from "./pages/dashboard/promotion/index.jsx";
 import RatingFeedbackDashboardPage from "./pages/dashboard/rating-feedback/index.jsx";
 import StaffPage from "./pages/dashboard/staff/index.jsx";
 import OrderPage from "./pages/dashboard/order/index.jsx";
-import CustomerPage from "./pages/dashboard/customer/index.jsx";
+import CustomerDashboardPage from "./pages/dashboard/customer/index.jsx";
 
 //Single Page Application
 //Client side rendering
@@ -385,6 +385,10 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "order",
+        element: <OrderPage />,
+      },
+      {
         path: "product",
         element: <ProductDashboardPage />,
       },
@@ -405,12 +409,8 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "order",
-        element: <OrderPage />,
-      },
-      {
         path: "customer",
-        element: <CustomerPage />,
+        element: <CustomerDashboardPage />,
       },
     ],
   },
