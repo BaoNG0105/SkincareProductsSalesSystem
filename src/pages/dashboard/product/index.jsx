@@ -1,10 +1,7 @@
 import { Button, Modal, Table, Form, Input, Avatar, message } from "antd";
+import { FaEdit, FaTrash } from "react-icons/fa";
 import { useState, useEffect } from "react";
-import {
-  DeleteOutlined,
-  PlusOutlined,
-  ShoppingOutlined,
-} from "@ant-design/icons";
+import { PlusOutlined, ShoppingOutlined } from "@ant-design/icons";
 import {
   getProduct,
   postProduct,
@@ -87,6 +84,19 @@ function ProductDashboardPage() {
     }
   };
 
+  const handleEdit = (record) => {
+    setEditingProduct(record);
+    form.setFieldsValue({
+      productName: record.productName,
+      price: record.price,
+      description: record.description,
+      category: record.category,
+      quantity: record.quantity,
+      image: record.image,
+    });
+    setIsOpen(true);
+  };
+
   const handleUpdate = async (updatedProduct) => {
     try {
       if (
@@ -106,11 +116,11 @@ function ProductDashboardPage() {
 
       const submitData = {
         productName: updatedProduct.productName.trim(),
-        description: updatedProduct.description?.trim() || "string",
+        description: updatedProduct.description?.trim() || "",
         category: updatedProduct.category.trim(),
         price: parseFloat(updatedProduct.price),
         stockQuantity: parseInt(updatedProduct.quantity),
-        image: updatedProduct.image?.trim() || "string",
+        image: updatedProduct.image?.trim() || "",
       };
 
       const response = await updateProduct(
@@ -205,11 +215,14 @@ function ProductDashboardPage() {
       title: "Actions",
       key: "actions",
       render: (_, record) => (
-        <Button
-          icon={<DeleteOutlined />}
-          onClick={() => handleDelete(record.productId)}
-          danger
-        />
+        <div className="flex gap-2">
+          <Button icon={<FaEdit />} onClick={() => handleEdit(record)} />
+          <Button
+            icon={<FaTrash />}
+            onClick={() => handleDelete(record.productId)}
+            danger
+          />
+        </div>
       ),
     },
   ];
