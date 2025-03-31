@@ -38,7 +38,7 @@ import ShippingPolicyPage from "./pages/policies/shipping/index.jsx";
 import TermsConditionsPage from "./pages/policies/terms-conditions/index.jsx";
 import DashboardLayout from "./layout/DashboardLayout.jsx";
 import OverviewPage from "./pages/dashboard/overview/index.jsx";
-import ProductPage from "./pages/dashboard/product/index.jsx";
+import ProductDashboardPage from "./pages/dashboard/product/index.jsx";
 import PromotionDashboardPage from "./pages/dashboard/promotion/index.jsx";
 import RatingFeedbackPage from "./pages/dashboard/rating-feedback/index.jsx";
 import StaffPage from "./pages/dashboard/staff/index.jsx";
@@ -386,7 +386,7 @@ const router = createBrowserRouter([
       },
       {
         path: "product",
-        element: <ProductPage />,
+        element: <ProductDashboardPage />,
       },
       {
         path: "promotion",
