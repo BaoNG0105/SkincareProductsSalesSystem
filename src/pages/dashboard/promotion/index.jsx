@@ -249,17 +249,48 @@ const PromotionDashboardPage = () => {
           <Form.Item
             name="startDate"
             label="Start Date"
-            rules={[{ required: true, message: 'Please select start date!' }]}
+            rules={[
+              { required: true, message: 'Please select start date!' },
+              {
+                validator: (_, value) => {
+                  if (value && value.isBefore(dayjs(), 'day')) {
+                    return Promise.reject('Start date cannot be before today');
+                  }
+                  return Promise.resolve();
+                }
+              }
+            ]}
           >
-            <DatePicker className="w-full" />
+            <DatePicker 
+              className="w-full" 
+              disabledDate={(current) => current && current < dayjs().startOf('day')}
+            />
           </Form.Item>
 
           <Form.Item
             name="endDate"
             label="End Date"
-            rules={[{ required: true, message: 'Please select end date!' }]}
+            rules={[
+              { required: true, message: 'Please select end date!' },
+              {
+                validator: (_, value) => {
+                  const startDate = form.getFieldValue('startDate');
+                  if (startDate && value && value.isBefore(startDate)) {
+                    return Promise.reject('End date must be after start date');
+                  }
+                  return Promise.resolve();
+                }
+              }
+            ]}
           >
-            <DatePicker className="w-full" />
+            <DatePicker 
+              className="w-full"
+              disabledDate={(current) => {
+                const startDate = form.getFieldValue('startDate');
+                return (current && current < dayjs().startOf('day')) || 
+                       (startDate && current && current < startDate);
+              }}
+            />
           </Form.Item>
 
           <Form.Item
