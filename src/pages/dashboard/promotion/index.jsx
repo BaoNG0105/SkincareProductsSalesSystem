@@ -63,6 +63,18 @@ const PromotionDashboardPage = () => {
         available: values.available
       };
 
+      // Kiểm tra trùng code khi tạo mới
+      if (!selectedPromotion) {
+        const isDuplicate = promotions.some(
+          promotion => promotion.code.toLowerCase() === values.code.toLowerCase()
+        );
+        
+        if (isDuplicate) {
+          toast.error('Promotion code already exists');
+          return;
+        }
+      }
+
       if (selectedPromotion) {
         await updatePromotion(selectedPromotion.promotionId, submitData);
         toast.success('Promotion updated successfully');
