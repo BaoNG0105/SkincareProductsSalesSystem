@@ -336,6 +336,8 @@ const RegisterPage = () => {
                       value={formData.passwordHash}
                       onChange={handleChange}
                       className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500 pr-10"
+                      placeholder="Enter your password"
+                      title="Password must contain at least 8 characters, including uppercase, lowercase, number and special character (!@#$%^&*)"
                     />
                     <button
                       type="button"
@@ -349,6 +351,17 @@ const RegisterPage = () => {
                       )}
                     </button>
                   </div>
+                  {/* Password requirements hint */}
+                  <p className="mt-1 text-xs text-gray-500">
+                    Password must contain:
+                    <ul className="list-disc list-inside ml-2">
+                      <li>At least 8 characters</li>
+                      <li>Uppercase letter (A-Z)</li>
+                      <li>Lowercase letter (a-z)</li>
+                      <li>Number (0-9)</li>
+                      <li>Special character (!@#$%^&*)</li>
+                    </ul>
+                  </p>
                   {formData.passwordHash && (
                     <div className="mt-2">
                       <div className="h-2 rounded-full bg-gray-200">
