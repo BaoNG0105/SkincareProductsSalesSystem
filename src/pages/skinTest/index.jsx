@@ -161,7 +161,7 @@ const SkinTypeTest = () => {
       setIsSubmitting(true);
       const token = localStorage.getItem("token"); //Lấy token từ local storage
       if (!token) { //Kiểm tra xem token có tồn tại không
-        toast.error("Vui lòng đăng nhập để lưu kết quả kiểm tra da.");
+        toast.error("Please login to save the skin test result.");
         return;
       }
 
@@ -174,12 +174,12 @@ const SkinTypeTest = () => {
       };
 
       await postSkinTestResult(formData); //Gửi form data lên API
-      toast.success("Đã lưu kết quả kiểm tra da thành công!"); //Hiển thị thông báo thành công
+      toast.success("Skin test result saved successfully!"); //Hiển thị thông báo thành công
       setTestResult(testResultId); //Lưu kết quả kiểm tra da vào state
 
     } catch (error) {
-      console.error("Lỗi khi gửi kết quả:", error); //Hiển thị lỗi nếu có lỗi
-      toast.error("Không thể lưu kết quả. Vui lòng thử lại."); //Hiển thị thông báo lỗi
+      console.error("Error sending result:", error); //Hiển thị lỗi nếu có lỗi
+      toast.error("Cannot save result. Please try again."); //Hiển thị thông báo lỗi
     } finally {
       setIsSubmitting(false); //Đặt trạng thái submit về false
     }
